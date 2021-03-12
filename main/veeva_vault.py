@@ -51,7 +51,7 @@ def authorize(vault: str, user_name: str, password: str) -> session_details:
     try:
 
         param = {"username": user_name, "password": password}
-        url = "https://" + vault + ".veevavault.com/api/v19.1/auth"
+        url = "https://" + vault + ".veevavault.com/api/v20.3/auth"
         auth = requests.post(url, params=param)
         if auth.status_code != 200:
             raise HttpException(responses[auth.status_code])
