@@ -129,3 +129,66 @@ def execute_vql(
         return results
     except requests.exceptions.ConnectionError:
         return {"error": "Connection Error"}
+
+
+def df_to_pdf(data, pdf_file):
+    """
+    Generates a PDF report from a Pandas DataFrame object
+    """
+
+    def addPageNumber(
+        canvas, doc
+    ):  # this subfunction will be called to add page numbers
+        page_num = canvas.getPageNumber()
+        text = "Page %s" % page_num
+        canvas.drawCentredString(200 * mm, 20 * mm, text)
+
+    # build paragraph styles
+    styles = getSampleStyleSheet()
+    styleH = styles["Heading1"]
+    styleC = ParagraphStyle("small", parent=styles["Normal"], fontSize=8)
+    enc_pw = "".join(
+        choice(ascii_letters + digits + punctuation) for i in range(12)
+    )  # build a strong 12-char password
+    enc = pdfencrypt.StandardEncryption(
+        "", ownerPassword=enc_pw, canModify=0
+    )  # set encryption
+    data.fillna("", inplace=True)
+    table_data = data.values.tolist()
+    # convert the dataframe to a list of list,
+    # enclose the content of cell values in a Paragraph object in order to apply word wrapping
+    formatted_data = [data.columns.values.tolist()] + [
+        [Paragraph(str(cell), styleC) for cell in row] for row in table_data
+    ]
+    table_style = [
+        ("GRID", (0, 0), (-1, -1), 0.25, colors.black),  # full grid on the whole table
+        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),  # first row in bold
+        ("FONTSIZE", (0, 0), (-1, -1), 8),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),  # cell content aligned to the top
+    ]
+    pdf_table = Table(
+        data=formatted_data,
+        repeatRows=1,
+        style=TableStyle(table_style),
+        spaceBefore=24,
+        hAlign="LEFT",
+    )
+    title = Paragraph(
+        "Report generated on "
+        + datetime.now(tz=get_localzone()).strftime("%d %b %Y %H:%M:%S %Z %z"),
+        styleH,
+    )
+    doc = SimpleDocTemplate(
+        pdf_file,
+        pagesize=landscape(A3),
+        leftMargin=36,
+        rightMargin=36,
+        title="Vault Audit Trail Report",
+        author=getuser(),
+        encrypt=enc,
+    )
+    element = []
+    element.append(title)
+    element.append(pdf_table)
+    doc.build(element, onFirstPage=addPageNumber, onLaterPages=addPageNumber)
+    print("Exported %s audit records to PDF" % str(len(data.index)))
