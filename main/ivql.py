@@ -6,7 +6,7 @@ import os
 import configparser
 import argparse
 import sqlite3
-from pandas import json_normalize
+import pandas as pd
 from http.client import responses
 
 from pprint import pprint
@@ -37,6 +37,46 @@ class session_details:
     allvaults: dict
 
 
+class custom_df(pd.DataFrame):
+    def __init__(self, *args):
+        pd.DataFrame.__init__(self, *args)
+
+    def expand(self):
+        def expand_col(col, sep="_"):
+            df = col.apply(pd.Series)
+            if 0 in df.columns:  # this occurs for NaN rows
+                df.drop(columns=0, inplace=True)
+            mapping = {newcol: f"{col.name}{sep}{newcol}" for newcol in df.columns}
+            df.rename(mapping, axis="columns", inplace=True)
+            return df
+
+        while True:
+            processed = False
+            for col in self.columns:
+                first_val = self[col].first_valid_index()
+                if first_val != None:
+                    if type(self[col].iloc[first_val]) == list:
+                        self = self.explode(col)
+                        processed = True
+            self = self.reset_index(drop=True)
+            for col in self.columns:
+                first_val = self[col].first_valid_index()
+                if first_val != None:
+                    if type(self[col].iloc[first_val]) == dict:
+                        self = pd.concat(
+                            [self, expand_col(self[col])],
+                            axis="columns",
+                        ).drop(col, axis="columns")
+                        processed = True
+            if not processed:
+                break
+        return self
+
+
+def cjson_normalize(data):
+    return custom_df(pd.json_normalize(data))
+
+
 def string_to_bool(str_value):
     """
     Converts a string representation of a boolean value
@@ -65,8 +105,8 @@ def dump_to_db(json_data, connection, table):
     """
     Dump a JSON array into a database table
     """
-    df = json_normalize(json_data)
-    df = df.reindex(columns=list(json_data[0].keys()))
+    df = cjson_normalize(json_data)
+    df = df.expand()
     df.to_sql(table, connection, index=False)
 
 
@@ -267,19 +307,15 @@ def spool(__json):
         except:
             print("Could not write file " + file_name + ".xml")
     elif settings["format"] == "csv":
+        df = cjson_normalize(__json["data"])
+        df = df.expand()
         try:
-            with open(
-                file_name + ".csv", "w", newline="", encoding="utf-8-sig"
-            ) as outfile:
-                # We're using utf-8-sig encoding here to make sure the file will display correctly in Excel.
-                csvwriter = csv.writer(outfile, delimiter=settings["delim"])
-                count = 0
-                for data_item in __json["data"]:
-                    if count == 0:
-                        col_header = data_item.keys()
-                        csvwriter.writerow(col_header)
-                        count += 1
-                    csvwriter.writerow(data_item.values())
+            df.to_csv(
+                file_name + ".csv",
+                sep=settings["delim"],
+                index=False,
+                encoding="utf-8-sig",
+            )
         except:
             print("Could not write file " + file_name + ".csv")
 
@@ -287,16 +323,7 @@ def spool(__json):
 def main():
     global forbidden_chars
 
-    forbidden_chars = (
-        "<",
-        ">",
-        ":",
-        '"',
-        "/",
-        "|",
-        "?",
-        "*",
-    )  # Forbidden characters that can't be used in folder of file name
+    forbidden_chars = "<>:'/|?*" + '"'  # Forbidden characters that can't be used in folder of file name
     rjson = None
 
     get_settings()
@@ -470,4 +497,3 @@ try:
     main()
 except KeyboardInterrupt:
     sys.exit("Bye!")
-
