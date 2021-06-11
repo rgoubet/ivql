@@ -1,4 +1,5 @@
 import requests
+import pandas as pd
 from getpass import getuser
 from dataclasses import dataclass
 from http.client import responses
@@ -40,6 +41,47 @@ class user:
     securityPolicy: str
     group: str
     activationDate: str
+
+
+class custom_df(pd.DataFrame):
+    def __init__(self, *args):
+        pd.DataFrame.__init__(self, *args)
+
+    def expand(self):
+        def expand_col(col, sep="_"):
+            df = col.apply(pd.Series)
+            if 0 in df.columns:  # this occurs for NaN rows
+                df.drop(columns=0, inplace=True)
+            mapping = {newcol: f"{col.name}{sep}{newcol}" for newcol in df.columns}
+            df.rename(mapping, axis="columns", inplace=True)
+            return df
+
+        while True:
+            processed = False
+            for col in self.columns:
+                first_val = self[col].first_valid_index()
+                if first_val != None:
+                    if type(self[col].iloc[first_val]) == list:
+                        self = self.explode(col)
+                        processed = True
+            self = self.reset_index(drop=True)
+            for col in self.columns:
+                first_val = self[col].first_valid_index()
+                if first_val != None:
+                    if type(self[col].iloc[first_val]) == dict:
+                        self = pd.concat(
+                            [self, expand_col(self[col])],
+                            axis="columns",
+                        ).drop(col, axis="columns")
+                        processed = True
+            if not processed:
+                break
+        return self
+
+
+def cjson_normalize(data):
+    return custom_df(pd.json_normalize(data))
+
 
 
 def authorize(vault: str, user_name: str, password: str) -> session_details:
