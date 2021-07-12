@@ -16,6 +16,7 @@ from re import match
 from urllib.parse import urlparse
 from prompt_toolkit import PromptSession
 from prompt_toolkit.completion import WordCompleter
+from tabulate import tabulate
 
 
 class AuthenticationException(Exception):
@@ -121,7 +122,7 @@ def parse_args():
     parser.add_argument("-u", "--user", help="User name")
     parser.add_argument("-p", "--password", help="Password")
     parser.add_argument(
-        "-s", "--server", help='Vault server, excluding ".veevavault.com"'
+        "-v", "--vault", help='Vault server, excluding ".veevavault.com"'
     )
     return parser.parse_args()
 
@@ -178,13 +179,34 @@ def execute_vql(
 
 
 def main():
-    # args = parse_args()  # get command line arguments
-    with open('completer.txt', 'r') as f:
-        vql_completer = WordCompleter(f.read().splitlines())
-    session = PromptSession(completer=vql_completer)
+    args = parse_args()  # get command line arguments
+
+    vault_session = authorize(args.user, args.password, args.vault)
+    try:
+        with open("completer.txt", "r") as f:
+            vql_completer = WordCompleter(f.read().splitlines())
+    except FileNotFoundError:
+        print("No autocompletion configuration file found")
+        session = PromptSession()
+    else:
+        session = PromptSession(completer=vql_completer)
     while True:
-        query = session.prompt("> ")
-        print(query)
+        query = session.prompt("VQL> ")
+        if query.lower() in ("quit", "exit"):
+            print("Bye!")
+            break
+        elif query == "":
+            pass
+        elif query.lower() == "cls":
+            os.system("cls")
+        elif not match("SELECT ", query.upper()):
+            print("Not a select statement or known command.")
+        else:
+            query_response = custom_df.cjson_normalize(
+                execute_vql(vault_session, query)
+            )
+            query_response = query_response.expand()
+            print(tabulate(query_response, headers="key", tablefmt="github"))
 
 
 if __name__ == "__main__":
