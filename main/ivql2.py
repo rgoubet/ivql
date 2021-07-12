@@ -14,7 +14,8 @@ from dataclasses import dataclass
 from http.client import responses
 from re import match
 from urllib.parse import urlparse
-from prompt_toolkit import prompt
+from prompt_toolkit import PromptSession
+from prompt_toolkit.completion import WordCompleter
 
 
 class AuthenticationException(Exception):
@@ -183,7 +184,13 @@ def execute_vql(
 
 
 def main():
-    args = parse_args()  # get command line arguments
+    # args = parse_args()  # get command line arguments
+    with open('completer.txt', 'r') as f:
+        vql_completer = WordCompleter(f.read().splitlines())
+    session = PromptSession(completer=vql_completer)
+    while True:
+        query = session.prompt("> ")
+        print(query)
 
 
 if __name__ == "__main__":
