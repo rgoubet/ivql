@@ -115,20 +115,14 @@ def authorize(vault: str, user_name: str, password: str) -> session_details:
 
 def parse_args():
     # Parse command line arguments and return parameters
-    parser = argparse.ArgumentParser(description="Convert CSV delimiters")
-    parser.add_argument(
-        "-i",
-        "--input",
-        default=",",
-        help="Specifies the delimiter for the CSV file (default=',')",
+    parser = argparse.ArgumentParser(
+        description="An interactive VQL prompt", prog="ivql"
     )
+    parser.add_argument("-u", "--user", help="User name")
+    parser.add_argument("-p", "--password", help="Password")
     parser.add_argument(
-        "-o",
-        "--output",
-        default=";",
-        help="Name of the ouput CSV file (default='merged.csv')",
+        "-s", "--server", help='Vault server, excluding ".veevavault.com"'
     )
-    parser.add_argument("file", help="CSV file")
     return parser.parse_args()
 
 
