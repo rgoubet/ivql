@@ -350,3 +350,4 @@ MigrationBackup/
 .ionide/
 .vscode/.ropeproject/config.py
 .vscode/.ropeproject/objectdb
+main/ivql.history

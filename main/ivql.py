@@ -120,7 +120,7 @@ def parse_args():
     parser.add_argument("-u", "--user", help="User name")
     parser.add_argument("-p", "--password", help="Password")
     parser.add_argument(
-        "-v", "--vault", help='Vault server, excluding ".veevavault.com"'
+        "vault", help='Vault server, excluding ".veevavault.com"'
     )
     return parser.parse_args()
 
@@ -152,16 +152,11 @@ def get_config():
 def execute_vql(
     session: session_details,
     vql_query: str,
-    limit: int = 0,
     pages: int = 0,
     tokenize: bool = False,
 ) -> dict:
     try:
-        if limit == 0:
-            strLimit = ""
-        else:
-            strLimit = " LIMIT " + str(limit)
-        payload = {"q": vql_query + strLimit}
+        payload = {"q": vql_query}
         http_params = {}
         if tokenize:
             http_params["tokenize"] = str(tokenize)
@@ -202,6 +197,10 @@ def execute_vql(
 
 def main():
     args = parse_args()  # get command line arguments
+    if args.user is None:
+        args.user = input("User name: ")
+    if args.password is None:
+        args.password = input("Password: ")
 
     config = get_config()
 
@@ -233,6 +232,8 @@ def main():
             pass
         elif query.lower() == "cls":
             os.system("cls")
+        elif query == 'delimiter':
+            print('Current delimiter:' + config['delim'])
         elif query.lower()[:9] == "delimiter":
             config['delim'] = query.split(" ")[-1]
         elif query.lower()[:6] == "export":
