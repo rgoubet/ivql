@@ -79,9 +79,8 @@ def authorize(vault: str, user_name: str, password: str) -> session_details:
     In case authentication fails, raises a custom exception
     """
     try:
-
         param = {"username": user_name, "password": password}
-        url = f"https://{vault}.veevavault.com/api/v20.3/auth"
+        url = f"https://{vault}.veevavault.com/api/v21.1/auth"
         auth = requests.post(url, params=param)
         if auth.status_code != 200:
             raise HttpException(responses[auth.status_code])
@@ -119,9 +118,7 @@ def parse_args():
     )
     parser.add_argument("-u", "--user", help="User name")
     parser.add_argument("-p", "--password", help="Password")
-    parser.add_argument(
-        "vault", help='Vault server, excluding ".veevavault.com"'
-    )
+    parser.add_argument("vault", help='Vault server, excluding ".veevavault.com"')
     return parser.parse_args()
 
 
@@ -212,8 +209,8 @@ def main():
         AuthenticationException,
     ) as e:
         sys.exit(e)
-    
-    vql_history = FileHistory('ivql.history')
+
+    vql_history = FileHistory("ivql.history")
 
     try:
         with open("completer.txt", "r") as f:
@@ -222,7 +219,9 @@ def main():
         print("No autocompletion configuration file found")
         session = PromptSession(history=vql_history)
     else:
-        session = PromptSession(completer=vql_completer, history=vql_history, complete_while_typing=False)
+        session = PromptSession(
+            completer=vql_completer, history=vql_history, complete_while_typing=False
+        )
     while True:
         query = session.prompt("VQL> ")
         if query.lower() in ("quit", "exit"):
@@ -232,10 +231,10 @@ def main():
             pass
         elif query.lower() == "cls":
             os.system("cls")
-        elif query == 'delimiter':
-            print('Current delimiter:' + config['delim'])
+        elif query == "delimiter":
+            print("Current delimiter:" + config["delim"])
         elif query.lower()[:9] == "delimiter":
-            config['delim'] = query.split(" ")[-1]
+            config["delim"] = query.split(" ")[-1]
         elif query.lower()[:6] == "export":
             exp_format = query.split(" ")[-1]
             timestamp = time.strftime("%Y%m%d%H%M%S", time.localtime())
