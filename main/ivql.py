@@ -7,14 +7,20 @@ import time
 import os
 import configparser
 import sys
+import re
 
 from dataclasses import dataclass
 from http.client import responses
 from urllib.parse import urlparse
+from tabulate import tabulate
 from prompt_toolkit import PromptSession
 from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.history import FileHistory
-from tabulate import tabulate
+from prompt_toolkit import PromptSession
+from prompt_toolkit.lexers import PygmentsLexer
+from prompt_toolkit.styles import Style
+from pygments.token import *
+from pygments.lexer import RegexLexer, words
 
 
 class AuthenticationException(Exception):
@@ -30,6 +36,111 @@ class session_details:
     sessionId: str
     mainvault: tuple
     allvaults: dict
+
+
+class VqlLexer(RegexLexer):
+    name = "VQL"
+    aliases = ["vql"]
+    flags = re.IGNORECASE
+
+    tokens = {
+        "root": [
+            (
+                words(
+                    (
+                        "select",
+                        "from",
+                        "order",
+                        "maxrows",
+                        "from",
+                        "where",
+                        "allversions",
+                        "caseinsensitive",
+                        "like",
+                        "limit",
+                        "longtext",
+                        "pagesize",
+                        "pageoffset",
+                        "offset",
+                        "richtext",
+                        "scope",
+                        "scope all",
+                        "scope content",
+                        "skip",
+                    ),
+                    suffix=r"\b",
+                ),
+                Keyword,
+            ),
+            (
+                words(
+                    (
+                        "between",
+                        "contains",
+                        "find",
+                    ),
+                    suffix=r"\b",
+                ),
+                Operator,
+            ),
+            (
+                words(
+                    (
+                        "documents",
+                        "users",
+                        "binders",
+                        "groups",
+                        "workflows",
+                        "events",
+                        "relationships",
+                        "picklists",
+                        "roles",
+                        "securitypolicies",
+                        "json",
+                        "csv",
+                    ),
+                    suffix=r"\b",
+                ),
+                Name.Variable,
+            ),
+            (
+                words(
+                    (
+                        "deletedstate()",
+                        "obsoletestate()",
+                        "statetype()",
+                        "steadystate()",
+                        "supersededstate()",
+                    ),
+                ),
+                Name.Class,
+            ),
+            (
+                words(
+                    ("exit", "quit", "export", "delimiter", "outdir", "cls"),
+                ),
+                Name.Tag,
+            ),
+            (r"\b.*__v\b", Name.Attribute),
+            (r"\b.*__c\b", Name.Attribute),
+            (r"\b.*__sys\b", Name.Attribute),
+            (r"\b.*__sysr\b", Name.Attribute),
+            (r"'[^']+'", String.Single),
+        ]
+    }
+
+
+style = Style.from_dict(
+    {
+        "pygments.keyword": "crimson",
+        "pygments.name.attribute": "lightblue",
+        "pygments.operator": "teal",
+        "pygments.string.single": "cyan",
+        "pygments.name.variable": "gold",
+        "pygments.name.class": "orange",
+        "pygments.name.tag": "deepskyblue",
+    }
+)
 
 
 class custom_df(pd.DataFrame):
@@ -87,7 +198,9 @@ def authorize(vault: str, user_name: str, password: str) -> session_details:
         auth_response_json = auth.json()
         if auth_response_json["responseStatus"] == "FAILURE":
             raise AuthenticationException(
-                "Authentication error: " + auth_response_json["errors"][0]["message"]
+                "Authentication error: "
+                + auth_response_json["errors"][0]["message"]
+                + f"with {password}"
             )
         else:
             sessionId = auth_response_json["sessionId"]
@@ -220,7 +333,11 @@ def main():
         session = PromptSession(history=vql_history)
     else:
         session = PromptSession(
-            completer=vql_completer, history=vql_history, complete_while_typing=False
+            completer=vql_completer,
+            history=vql_history,
+            complete_while_typing=False,
+            lexer=PygmentsLexer(VqlLexer),
+            style=style,
         )
     while True:
         query = session.prompt("VQL> ")
