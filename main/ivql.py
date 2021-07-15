@@ -16,7 +16,6 @@ from tabulate import tabulate
 from prompt_toolkit import PromptSession
 from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.history import FileHistory
-from prompt_toolkit import PromptSession
 from prompt_toolkit.lexers import PygmentsLexer
 from prompt_toolkit.styles import Style
 from pygments.token import *
@@ -121,10 +120,11 @@ class VqlLexer(RegexLexer):
                 ),
                 Name.Tag,
             ),
-            (r"\b.*__v\b", Name.Attribute),
-            (r"\b.*__c\b", Name.Attribute),
-            (r"\b.*__sys\b", Name.Attribute),
-            (r"\b.*__sysr\b", Name.Attribute),
+            (r"\b[^ ,]+__v\b", Name.Attribute),
+            (r"\b[^ ,]+__c\b", Name.Attribute),
+            (r"\b[^ ,]+__sys\b", Name.Attribute),
+            (r"\b[^ ,]+__sysr\b", Name.Attribute),
+            ("id", Name.Attribute),
             (r"'[^']+'", String.Single),
         ]
     }
@@ -133,11 +133,11 @@ class VqlLexer(RegexLexer):
 style = Style.from_dict(
     {
         "pygments.keyword": "crimson",
-        "pygments.name.attribute": "lightblue",
+        "pygments.name.attribute": "green",
         "pygments.operator": "teal",
         "pygments.string.single": "cyan",
         "pygments.name.variable": "gold",
-        "pygments.name.class": "orange",
+        "pygments.name.class": "purple",
         "pygments.name.tag": "deepskyblue",
     }
 )
@@ -330,7 +330,9 @@ def main():
             vql_completer = WordCompleter(f.read().splitlines())
     except FileNotFoundError:
         print("No autocompletion configuration file found")
-        session = PromptSession(history=vql_history)
+        session = PromptSession(
+            history=vql_history, lexer=PygmentsLexer(VqlLexer), style=style
+        )
     else:
         session = PromptSession(
             completer=vql_completer,
@@ -386,7 +388,7 @@ def main():
                 query_data = query_data.expand()
                 print(
                     tabulate(
-                        query_data,
+                        query_data.fillna(""),
                         headers="keys",
                         tablefmt="github",
                         showindex=False,
