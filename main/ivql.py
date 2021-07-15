@@ -66,6 +66,11 @@ class VqlLexer(RegexLexer):
                         "scope all",
                         "scope content",
                         "skip",
+                        "deletedstate",
+                        "obsoletestate",
+                        "statetype",
+                        "steadystate",
+                        "supersededstate",
                     ),
                     suffix=r"\b",
                 ),
@@ -104,18 +109,6 @@ class VqlLexer(RegexLexer):
             ),
             (
                 words(
-                    (
-                        "deletedstate()",
-                        "obsoletestate()",
-                        "statetype()",
-                        "steadystate()",
-                        "supersededstate()",
-                    ),
-                ),
-                Name.Class,
-            ),
-            (
-                words(
                     ("exit", "quit", "export", "delimiter", "outdir", "cls"),
                 ),
                 Name.Tag,
@@ -137,7 +130,7 @@ style = Style.from_dict(
         "pygments.operator": "teal",
         "pygments.string.single": "cyan",
         "pygments.name.variable": "gold",
-        "pygments.name.class": "purple",
+        # "pygments.name.class": "purple",
         "pygments.name.tag": "deepskyblue",
     }
 )
