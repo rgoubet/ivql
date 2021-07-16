@@ -253,8 +253,7 @@ def createFolder(directory):
         if not os.path.exists(directory):
             os.makedirs(directory)
     except OSError:
-        print("Error: Creating directory. " + directory)
-
+        raise
 
 def get_config():
     """Return the configuration from the config file
@@ -267,8 +266,11 @@ def get_config():
         if config.has_option("DEFAULT", "delimiter"):
             settings["delim"] = config["DEFAULT"]["delimiter"]
         if config.has_option("DEFAULT", "outdir"):
-            settings["outdir"] = config["DEFAULT"]["outdir"]
-            createFolder(settings["outdir"])
+            try:
+                createFolder(config["DEFAULT"]["outdir"])
+                settings["outdir"] = config["DEFAULT"]["outdir"]
+            except OSError:
+                print("Error: Creating directory. " + config["DEFAULT"]["outdir"])
         if config.has_option("DEFAULT", "complete_on_tab"):
             settings["complete_while_typing"] = not eval(
                 config["DEFAULT"]["complete_on_tab"]
@@ -385,8 +387,12 @@ def main():
         elif query == "outdir":
             print("Current output folder: " + config["outdir"])
         elif query.lower()[:6] == "outdir":
-            config["outdir"] = query.split(" ")[-1]
-            createFolder(config["outdir"])
+            outdir = query.split(" ")[-1]
+            try:
+                createFolder(outdir)
+                config["outdir"] = outdir
+            except OSError:
+                print("Error: Creating directory. " + outdir)
         elif query.lower()[:6] == "export":
             exp_format = query.split(" ")[-1]
             timestamp = time.strftime("%Y%m%d%H%M%S", time.localtime())
