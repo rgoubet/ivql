@@ -163,6 +163,8 @@ class custom_df(pd.DataFrame):
         and columns containing lists vertically"""
 
         def expand_col(col, sep="_"):
+            '''"Horizontal" equivalent of pandas' vertical
+            explode() function'''
             df = col.apply(pd.Series)
             if 0 in df.columns:  # this occurs for NaN rows
                 df.drop(columns=0, inplace=True)
