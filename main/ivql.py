@@ -126,6 +126,7 @@ class VqlLexer(RegexLexer):
             (r"\b[^ ,]+__sysr\b", Name.Attribute),
             ("id", Name.Attribute),
             (r"'[^']+'", String.Single),
+            (r"\b[0-9]+\b", Number.Integer),
         ]
     }
 
@@ -136,6 +137,7 @@ style = Style.from_dict(
         "pygments.name.attribute": "green",
         "pygments.operator": "teal",
         "pygments.string.single": "cyan",
+        "pygments.number.integer": "cyan",
         "pygments.name.variable": "gold",
         "pygments.name.class": "purple",
         "pygments.name.tag": "deepskyblue",
@@ -144,10 +146,13 @@ style = Style.from_dict(
 
 
 class custom_df(pd.DataFrame):
+    '''Custom subclass of pandas with extra method'''
     def __init__(self, *args):
         pd.DataFrame.__init__(self, *args)
 
     def expand(self):
+        '''Expand columns containing dictionaries horizontally
+        and columns containing lists vertically'''
         def expand_col(col, sep="_"):
             df = col.apply(pd.Series)
             if 0 in df.columns:  # this occurs for NaN rows
@@ -164,16 +169,13 @@ class custom_df(pd.DataFrame):
                     if type(self[col].iloc[first_val]) == list:
                         self = self.explode(col)
                         processed = True
-            self = self.reset_index(drop=True)
-            for col in self.columns:
-                first_val = self[col].first_valid_index()
-                if first_val != None:
-                    if type(self[col].iloc[first_val]) == dict:
+                    elif type(self[col].iloc[first_val]) == dict:
                         self = pd.concat(
                             [self, expand_col(self[col])],
                             axis="columns",
                         ).drop(col, axis="columns")
                         processed = True
+            self = self.reset_index(drop=True)
             if not processed:
                 break
         return self
@@ -225,7 +227,7 @@ def authorize(vault: str, user_name: str, password: str) -> session_details:
 
 
 def parse_args():
-    # Parse command line arguments and return parameters
+    '''Parse command line arguments and return parameters'''
     parser = argparse.ArgumentParser(
         description="An interactive VQL prompt", prog="ivql"
     )
@@ -236,6 +238,8 @@ def parse_args():
 
 
 def get_config():
+    '''Return the configuration from the config file
+    If no config file is found, return defaults'''
     def createFolder(directory):
         try:
             if not os.path.exists(directory):
@@ -244,7 +248,8 @@ def get_config():
             print("Error: Creating directory. " + directory)
 
     config = configparser.ConfigParser()
-    settings = {"delim": ",", "outdir": "."}
+    # Set default config values
+    settings = {"delim": ",", "outdir": ".", "complete_while_typing": False}
     try:  # If the config file loads successfully (i.e. it is well-formed)
         config.read("ivql.ini")
         if config.has_option("DEFAULT", "delimiter"):
@@ -252,6 +257,10 @@ def get_config():
         if config.has_option("DEFAULT", "outdir"):
             settings["outdir"] = config["DEFAULT"]["outdir"]
             createFolder(settings["outdir"])
+        if config.has_option("DEFAULT", "complete_on_tab"):
+            settings["complete_while_typing"] = not eval(
+                config["DEFAULT"]["complete_on_tab"]
+            )
     except configparser.MissingSectionHeaderError:
         print(
             "Could not load the config file. It may not be well formed. Default values will be used."
@@ -265,6 +274,7 @@ def execute_vql(
     pages: int = 0,
     tokenize: bool = False,
 ) -> dict:
+    '''Execute a VQL query and return results'''
     try:
         payload = {"q": vql_query}
         http_params = {}
@@ -312,8 +322,9 @@ def main():
     if args.password is None:
         args.password = input("Password: ")
 
-    config = get_config()
+    config = get_config() # Get config settings
 
+    # Get a Vault session
     try:
         vault_session = authorize(args.vault, args.user, args.password)
     except (
@@ -325,22 +336,27 @@ def main():
 
     vql_history = FileHistory("ivql.history")
 
+    # Initiate the prompt with a completer if the lexicon file is found
     try:
         with open("completer.txt", "r") as f:
             vql_completer = WordCompleter(f.read().splitlines())
     except FileNotFoundError:
         print("No autocompletion configuration file found")
         session = PromptSession(
-            history=vql_history, lexer=PygmentsLexer(VqlLexer), style=style
+            history=vql_history,
+            complete_while_typing=config["complete_while_typing"],
+            lexer=PygmentsLexer(VqlLexer),
+            style=style,
         )
     else:
         session = PromptSession(
             completer=vql_completer,
             history=vql_history,
-            complete_while_typing=False,
+            complete_while_typing=config["complete_while_typing"],
             lexer=PygmentsLexer(VqlLexer),
             style=style,
         )
+    # Start prompt REPL
     while True:
         query = session.prompt("VQL> ")
         if query.lower() in ("quit", "exit"):
@@ -399,5 +415,5 @@ def main():
 if __name__ == "__main__":
     try:
         sys.exit(main())
-    except KeyboardInterrupt:
+    except KeyboardInterrupt: # Gracefully exit on ctrl-c
         sys.exit("Bye!")
