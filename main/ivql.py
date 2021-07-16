@@ -153,13 +153,15 @@ style = Style.from_dict(
 
 
 class custom_df(pd.DataFrame):
-    '''Custom subclass of pandas with extra method'''
+    """Custom subclass of pandas with extra method"""
+
     def __init__(self, *args):
         pd.DataFrame.__init__(self, *args)
 
     def expand(self):
-        '''Expand columns containing dictionaries horizontally
-        and columns containing lists vertically'''
+        """Expand columns containing dictionaries horizontally
+        and columns containing lists vertically"""
+
         def expand_col(col, sep="_"):
             df = col.apply(pd.Series)
             if 0 in df.columns:  # this occurs for NaN rows
@@ -234,7 +236,7 @@ def authorize(vault: str, user_name: str, password: str) -> session_details:
 
 
 def parse_args():
-    '''Parse command line arguments and return parameters'''
+    """Parse command line arguments and return parameters"""
     parser = argparse.ArgumentParser(
         description="An interactive VQL prompt", prog="ivql"
     )
@@ -244,16 +246,17 @@ def parse_args():
     return parser.parse_args()
 
 
-def get_config():
-    '''Return the configuration from the config file
-    If no config file is found, return defaults'''
-    def createFolder(directory):
-        try:
-            if not os.path.exists(directory):
-                os.makedirs(directory)
-        except OSError:
-            print("Error: Creating directory. " + directory)
+def createFolder(directory):
+    try:
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+    except OSError:
+        print("Error: Creating directory. " + directory)
 
+
+def get_config():
+    """Return the configuration from the config file
+    If no config file is found, return defaults"""
     config = configparser.ConfigParser()
     # Set default config values
     settings = {"delim": ",", "outdir": ".", "complete_while_typing": False}
@@ -281,7 +284,7 @@ def execute_vql(
     pages: int = 0,
     tokenize: bool = False,
 ) -> dict:
-    '''Execute a VQL query and return results'''
+    """Execute a VQL query and return results"""
     try:
         payload = {"q": vql_query}
         http_params = {}
@@ -329,7 +332,7 @@ def main():
     if args.password is None:
         args.password = input("Password: ")
 
-    config = get_config() # Get config settings
+    config = get_config()  # Get config settings
 
     # Get a Vault session
     try:
@@ -381,6 +384,7 @@ def main():
             print("Current output folder: " + config["outdir"])
         elif query.lower()[:6] == "outdir":
             config["outdir"] = query.split(" ")[-1]
+            createFolder(config["outdir"])
         elif query.lower()[:6] == "export":
             exp_format = query.split(" ")[-1]
             timestamp = time.strftime("%Y%m%d%H%M%S", time.localtime())
@@ -426,5 +430,5 @@ def main():
 if __name__ == "__main__":
     try:
         sys.exit(main())
-    except KeyboardInterrupt: # Gracefully exit on ctrl-c
+    except KeyboardInterrupt:  # Gracefully exit on ctrl-c
         sys.exit("Bye!")
