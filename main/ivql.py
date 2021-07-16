@@ -18,7 +18,7 @@ from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.history import FileHistory
 from prompt_toolkit.lexers import PygmentsLexer
 from prompt_toolkit.styles import Style
-from pygments.token import Keyword, Operator, Name, String
+from pygments.token import Keyword, Operator, Name, String, Number
 from pygments.lexer import RegexLexer, words
 
 
@@ -109,6 +109,18 @@ class VqlLexer(RegexLexer):
             ),
             (
                 words(
+                    (
+                        "deletedstate",
+                        "obsoletestate",
+                        "statetype",
+                        "steadystate",
+                        "supersededstate",
+                    ),
+                ),
+                Name.Class,
+            ),
+            (
+                words(
                     ("exit", "quit", "export", "delimiter", "outdir", "cls"),
                 ),
                 Name.Tag,
@@ -117,6 +129,8 @@ class VqlLexer(RegexLexer):
             (r"\b[^ ,]+__c\b", Name.Attribute),
             (r"\b[^ ,]+__sys\b", Name.Attribute),
             (r"\b[^ ,]+__sysr\b", Name.Attribute),
+            (r"\b[^ ,]+__cr\b", Name.Attribute),
+            (r"\b[^ ,]+__vr\b", Name.Attribute),
             ("id", Name.Attribute),
             (r"'[^']+'", String.Single),
             (r"\b[0-9]+\b", Number.Integer),
@@ -132,7 +146,7 @@ style = Style.from_dict(
         "pygments.string.single": "cyan",
         "pygments.number.integer": "cyan",
         "pygments.name.variable": "gold",
-        # "pygments.name.class": "purple",
+        "pygments.name.class": "purple",
         "pygments.name.tag": "deepskyblue",
     }
 )
@@ -360,9 +374,13 @@ def main():
         elif query.lower() == "cls":
             os.system("cls")
         elif query == "delimiter":
-            print("Current delimiter:" + config["delim"])
+            print("Current delimiter: " + config["delim"])
         elif query.lower()[:9] == "delimiter":
             config["delim"] = query.split(" ")[-1]
+        elif query == "outdir":
+            print("Current output folder: " + config["outdir"])
+        elif query.lower()[:6] == "outdir":
+            config["outdir"] = query.split(" ")[-1]
         elif query.lower()[:6] == "export":
             exp_format = query.split(" ")[-1]
             timestamp = time.strftime("%Y%m%d%H%M%S", time.localtime())

@@ -1,7 +1,7 @@
 iVQL: Interactive VQL prompt
 ============================
 
-`iVQL` is an interactive VQL prompt similar to common command-line SQL clients. It supports auto-completion on pressing the Tab key, history between sessions, display the results in a tabular format and export to CSV and raw JSON.
+`iVQL` is an interactive VQL prompt similar to common command-line SQL clients. It supports auto-completion, history between sessions, display the results in a tabular format and export to CSV and raw JSON.
 
 Tabular display and CSV export automatically flatten data structures from nested queries.
 
@@ -24,7 +24,7 @@ optional arguments:
                         Password
 ```
 
-If `USER`, `PASSWORD` is missing, it will be requested at the prompt.
+If `USER` or `PASSWORD` is missing, it will be requested at the prompt.
 
 Note that iVQL does not support single sign-on.
 
@@ -32,7 +32,7 @@ Note that iVQL does not support single sign-on.
 The prompt takes either a `SELECT` [VQL statement](http://developer.veevavault.com/vql), or one of the following commands. All commands are non-case-sensitive.
 
 ## `export <json|csv>`
-Export the results of the last queries to a `JSON` or `CSV` file. The filename defined using the current time value.
+Export the results of the last queries to a `JSON` or `CSV` file. The filename is defined using the current time value.
 
 ## `delimiter <char>`
 Default `,`
@@ -63,12 +63,20 @@ You can define the default settings for `outdir` and `delimiter` by specifying t
 [DEFAULT]
 delimiter = ,
 outdir = .
+complete_on_tab = True
 ```
 
+- `delimiter` defines the delimiter for CSV exports (`,` by default)
+- `outdir` defines the output directory for exports (current directory by default)
+- `complete_on_tab` defines the behavior of auto-completion:
+  - If `True`, completion suggestions are displayed when pressing the Tab key
+  - If `False`, completion suggestions show up while typing
+
 # Note: VQL for SQL experts
+
 VQL has some distinct syntax that requires forgetting a few SQL assumptions:
 
-* **There are no joins**. Relationships between objects come predefined, and no new ones can be made *ad hoc*. Relationships can be discovered in the API and can be queried in two different syntaxes:
+* **There are no joins**. Relationships between objects come predefined, and no new ones can be made *ad hoc* with a `join` keyword. Relationships can be discovered in the API and can be queried in two different syntaxes:
 
   `"select id, name__v, security_model__cr.name__v, role__vr.name__v, user__vr.name__v from user_role_setup__v"` queries the `user_role_setup__v` object and also gets the `name__v` property of related objects (security model, role and user). Here, while `security_model__c` is the object, `security_model__cr` is the relationship between it and `user_role_setup__v`. This syntax applies because there Security Model has one value per document.
 
@@ -93,7 +101,7 @@ SELECT id,
          user__vr.name__v
 FROM user_role_setup__v
 WHERE user__vr.username__sys contains (
-  'bsmith@astrozinore.com', 'kpage@@astrozinore.com', 'venkatesh@astrozinore.com')
+  'bsmith@astrozinore.com', 'kpage@astrozinore.com', 'venkatesh@astrozinore.com')
 ```
 
 Retrieve all documents whose document name contains "Flexesine".
