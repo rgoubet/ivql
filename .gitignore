@@ -351,3 +351,4 @@ MigrationBackup/
 .vscode/.ropeproject/config.py
 .vscode/.ropeproject/objectdb
 main/ivql.history
+.vscode/settings.json
