@@ -406,6 +406,8 @@ def main():
                     print(f"Unrecognized format {exp_format}")
             except NameError:
                 print("No query results to export.")
+            except (FileNotFoundError, OSError):
+                print(f'Failed to export to {filename}.{exp_format}')
         elif query.lower()[:6] != "select":
             print("Not a select statement or known command.")
         else:
