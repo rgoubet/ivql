@@ -436,10 +436,10 @@ def main():
         elif query.strip() == "":
             pass
         elif query.lower() == "cls":
-            if sys.platform == 'win32':
+            if sys.platform == "win32":
                 os.system("cls")
             else:
-                os.system('clear')
+                os.system("clear")
         elif query == "delimiter":
             print("Current delimiter: " + config["delim"])
         elif query.lower()[:9] == "delimiter":
