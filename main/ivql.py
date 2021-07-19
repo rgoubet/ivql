@@ -121,7 +121,15 @@ class VqlLexer(RegexLexer):
             ),
             (
                 words(
-                    ("exit", "quit", "export", "delimiter", "outdir", "cls"),
+                    (
+                        "exit",
+                        "quit",
+                        "export",
+                        "delimiter",
+                        "outdir",
+                        "cls",
+                        "getfields",
+                    ),
                 ),
                 Name.Tag,
             ),
@@ -163,8 +171,8 @@ class custom_df(pd.DataFrame):
         and columns containing lists vertically"""
 
         def expand_col(col, sep="_"):
-            '''"Horizontal" equivalent of pandas' vertical
-            explode() function'''
+            """ "Horizontal" equivalent of pandas' vertical
+            explode() function"""
             df = col.apply(pd.Series)
             if 0 in df.columns:  # this occurs for NaN rows
                 df.drop(columns=0, inplace=True)
@@ -255,6 +263,7 @@ def createFolder(directory):
     except OSError:
         raise
 
+
 def get_config():
     """Return the configuration from the config file
     If no config file is found, return defaults"""
@@ -270,7 +279,7 @@ def get_config():
                 createFolder(config["DEFAULT"]["outdir"])
                 settings["outdir"] = config["DEFAULT"]["outdir"]
             except OSError:
-                print("Error: Creating directory. " + config["DEFAULT"]["outdir"])
+                print("Error: Creating directory: " + config["DEFAULT"]["outdir"])
         if config.has_option("DEFAULT", "complete_on_tab"):
             settings["complete_while_typing"] = not eval(
                 config["DEFAULT"]["complete_on_tab"]
@@ -329,6 +338,39 @@ def execute_vql(
         return {"error": "Connection Error"}
 
 
+def get_fields(session, vault_type):
+    if vault_type == "documents":
+        url = session.mainvault[2] + f"/metadata/objects/{vault_type}/properties"
+        r = requests.get(url, headers={"Authorization": session.sessionId})
+        if r.json()["responseStatus"] == "FAILURE":
+            print(r.json()["errors"][0]["message"])
+            return []
+        else:
+            docfields = [p["name"] for p in r.json()["properties"] if p["queryable"]]
+            docrelation = [
+                p["relationshipName"]
+                for p in r.json()["properties"]
+                if "relationshipName" in p.keys()
+            ]
+            return docfields + docrelation
+    elif vault_type in ["users", "groups"]:
+        url = session.mainvault[2] + f"/metadata/objects/{vault_type}"
+        r = requests.get(url, headers={"Authorization": session.sessionId})
+        if r.json()["responseStatus"] == "FAILURE":
+            print(r.json()["errors"][0]["message"])
+            return []
+        else:
+            return [p["name"] for p in r.json()["properties"] if p["queryable"]]
+    else:
+        url = session.mainvault[2] + f"/metadata/vobjects/{vault_type}"
+        r = requests.get(url, headers={"Authorization": session.sessionId})
+        if r.json()["responseStatus"] == "FAILURE":
+            print(r.json()["errors"][0]["message"])
+            return []
+        else:
+            return [p["name"] for p in r.json()["object"]["fields"]]
+
+
 def main():
     args = parse_args()  # get command line arguments
     if args.user is None:
@@ -376,7 +418,7 @@ def main():
         if query.lower() in ("quit", "exit"):
             print("Bye!")
             break
-        elif query == "":
+        elif query.strip() == "":
             pass
         elif query.lower() == "cls":
             os.system("cls")
@@ -392,7 +434,7 @@ def main():
                 createFolder(outdir)
                 config["outdir"] = outdir
             except OSError:
-                print("Error: Creating directory. " + outdir)
+                print("Error: Creating directory: " + outdir)
         elif query.lower()[:6] == "export":
             exp_format = query.split(" ")[-1]
             timestamp = time.strftime("%Y%m%d%H%M%S", time.localtime())
@@ -415,7 +457,13 @@ def main():
             except NameError:
                 print("No query results to export.")
             except (FileNotFoundError, OSError):
-                print(f'Failed to export to {filename}.{exp_format}')
+                print(f"Failed to export to {filename}.{exp_format}")
+        elif query.lower()[:9] == "getfields":
+            vault_type = query.split(" ")[-1]
+            qfields = get_fields(vault_session, vault_type.lower())
+            vql_completer.words.extend(
+                [f for f in qfields if f not in vql_completer.words]
+            )
         elif query.lower()[:6] != "select":
             print("Not a select statement or known command.")
         else:
