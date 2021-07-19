@@ -368,6 +368,14 @@ def get_fields(session, vault_type):
             return []
         else:
             return [p["name"] for p in r.json()["properties"] if p["queryable"]]
+    elif vault_type == "workflows":
+        url = session.mainvault[2] + f"/metadata/objects/{vault_type}"
+        r = requests.get(url, headers={"Authorization": session.sessionId})
+        if r.json()["responseStatus"] == "FAILURE":
+            print(r.json()["errors"][0]["message"])
+            return []
+        else:
+            return [p["name"] for p in r.json()["properties"]]
     else:
         url = session.mainvault[2] + f"/metadata/vobjects/{vault_type}"
         r = requests.get(url, headers={"Authorization": session.sessionId})
@@ -428,7 +436,10 @@ def main():
         elif query.strip() == "":
             pass
         elif query.lower() == "cls":
-            os.system("cls")
+            if sys.platform == 'win32':
+                os.system("cls")
+            else:
+                os.system('clear')
         elif query == "delimiter":
             print("Current delimiter: " + config["delim"])
         elif query.lower()[:9] == "delimiter":
