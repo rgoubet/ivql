@@ -34,7 +34,7 @@ class HttpException(Exception):
 class session_details:
     sessionId: str
     mainvault: tuple
-    allvaults: dict
+    allvaults: list
 
 
 class VqlLexer(RegexLexer):
@@ -71,6 +71,7 @@ class VqlLexer(RegexLexer):
                         "statetype",
                         "steadystate",
                         "supersededstate",
+                        "as",
                     ),
                     suffix=r"\b",
                 ),
@@ -228,16 +229,22 @@ def authorize(vault: str, user_name: str, password: str) -> session_details:
             api_url = "https://" + vault + ".veevavault.com/api"
             r = requests.get(api_url, headers={"Authorization": sessionId})
             all_api = r.json()["values"]
-            latest_api = all_api[list(all_api)[-1]]
+            latest_api = list(all_api)[-1]
             mainvault = tuple()
-            allvaults = dict()
+            allvaults = list()
             for vault_details in auth_response_json["vaultIds"]:
-                allvaults[vault_details["id"]] = vault_details["name"]
+                allvaults.append(
+                    (
+                        vault_details["id"],
+                        vault_details["name"],
+                        vault_details["url"] + "/" + latest_api,
+                    )
+                )
                 if vault_details["id"] == auth_response_json["vaultId"]:
                     mainvault = (
                         vault_details["id"],
                         vault_details["name"],
-                        latest_api,
+                        vault_details["url"] + "/" + latest_api,
                     )
             print(f"Authenticated in {mainvault[1]}")
             return session_details(sessionId, mainvault, allvaults)
@@ -436,7 +443,7 @@ def main():
             except OSError:
                 print("Error: Creating directory: " + outdir)
         elif query.lower()[:6] == "export":
-            exp_format = query.split(" ")[-1]
+            exp_format = query.split(" ")[-1].lower()
             timestamp = time.strftime("%Y%m%d%H%M%S", time.localtime())
             filename = os.path.join(config["outdir"], timestamp)
             try:
@@ -464,6 +471,7 @@ def main():
             vql_completer.words.extend(
                 [f for f in qfields if f not in vql_completer.words]
             )
+            vql_completer.words.sort()
         elif query.lower()[:6] != "select":
             print("Not a select statement or known command.")
         else:
