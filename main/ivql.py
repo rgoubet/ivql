@@ -222,7 +222,6 @@ def authorize(vault: str, user_name: str, password: str) -> session_details:
             raise AuthenticationException(
                 "Authentication error: "
                 + auth_response_json["errors"][0]["message"]
-                + f"with {password}"
             )
         else:
             sessionId = auth_response_json["sessionId"]
