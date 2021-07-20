@@ -264,6 +264,7 @@ def parse_args():
 
 
 def createFolder(directory):
+    """Create directory if it does not exists"""
     try:
         if not os.path.exists(directory):
             os.makedirs(directory)
@@ -346,6 +347,8 @@ def execute_vql(
 
 
 def get_fields(session, vault_type):
+    """Returns a list of fields and relationships for the supplied
+    Vault type (documents, users, groups, workflows...)"""
     if vault_type == "documents":
         url = session.mainvault[2] + f"/metadata/objects/{vault_type}/properties"
         r = requests.get(url, headers={"Authorization": session.sessionId})
@@ -383,10 +386,11 @@ def get_fields(session, vault_type):
             print(r.json()["errors"][0]["message"])
             return []
         else:
-            obj_fields = [p["name"] for p in r.json()["object"]["fields"]] + [
+            obj_fields = [p["name"] for p in r.json()["object"]["fields"]]
+            obj_rel = [
                 p["relationship_name"] for p in r.json()["object"]["relationships"]
             ]
-            return obj_fields
+            return obj_fields + obj_rel
 
 
 def main():
@@ -492,7 +496,9 @@ def main():
             vql_results = execute_vql(vault_session, query)
             if vql_results["responseStatus"] == "FAILURE":
                 print(
-                    f"Error: {vql_results['errors'][0]['type']}: {vql_results['errors'][0]['message']}"
+                    vql_results["errors"][0]["type"]
+                    + ": "
+                    + vql_results["errors"][0]["message"]
                 )
             else:
                 query_data = custom_df.cjson_normalize(vql_results["data"])
