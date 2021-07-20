@@ -383,7 +383,10 @@ def get_fields(session, vault_type):
             print(r.json()["errors"][0]["message"])
             return []
         else:
-            return [p["name"] for p in r.json()["object"]["fields"]]
+            obj_fields = [p["name"] for p in r.json()["object"]["fields"]] + [
+                p["relationship_name"] for p in r.json()["object"]["relationships"]
+            ]
+            return obj_fields
 
 
 def main():
@@ -494,6 +497,12 @@ def main():
             else:
                 query_data = custom_df.cjson_normalize(vql_results["data"])
                 query_data = query_data.expand()
+                query_data.drop(
+                    columns=[
+                        col for col in query_data.columns if "responseDetails" in col
+                    ],
+                    inplace=True,
+                )  # Remove responseDetails columns (subqueries)
                 print(
                     tabulate(
                         query_data.fillna(""),
