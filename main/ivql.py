@@ -220,8 +220,7 @@ def authorize(vault: str, user_name: str, password: str) -> session_details:
         auth_response_json = auth.json()
         if auth_response_json["responseStatus"] == "FAILURE":
             raise AuthenticationException(
-                "Authentication error: "
-                + auth_response_json["errors"][0]["message"]
+                "Authentication error: " + auth_response_json["errors"][0]["message"]
             )
         else:
             sessionId = auth_response_json["sessionId"]
@@ -386,10 +385,12 @@ def get_fields(session, vault_type):
             return []
         else:
             obj_fields = [p["name"] for p in r.json()["object"]["fields"]]
-            obj_rel = [
-                p["relationship_name"] for p in r.json()["object"]["relationships"]
-            ]
-            return obj_fields + obj_rel
+            if "relationships" in r.json()["object"].keys():
+                obj_rel = [
+                    p["relationship_name"] for p in r.json()["object"]["relationships"]
+                ]
+                obj_fields.extend(obj_rel)
+            return obj_fields
 
 
 def main():
