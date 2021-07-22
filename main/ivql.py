@@ -418,17 +418,16 @@ def main():
     try:
         with open("completer.txt", "r") as f:
             vql_completer = WordCompleter(f.read().splitlines())
-    except FileNotFoundError:
-        print("No autocompletion configuration file found")
         session = PromptSession(
+            completer=vql_completer,
             history=vql_history,
             complete_while_typing=config["complete_while_typing"],
             lexer=PygmentsLexer(VqlLexer),
             style=style,
         )
-    else:
+    except FileNotFoundError:
+        print("No autocompletion configuration file found")
         session = PromptSession(
-            completer=vql_completer,
             history=vql_history,
             complete_while_typing=config["complete_while_typing"],
             lexer=PygmentsLexer(VqlLexer),
