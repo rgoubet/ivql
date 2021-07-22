@@ -290,7 +290,7 @@ def get_config():
             settings["complete_while_typing"] = not eval(
                 config["DEFAULT"]["complete_on_tab"]
             )
-    except configparser.MissingSectionHeaderError:
+    except (configparser.MissingSectionHeaderError, PermissionError, OSError):
         print(
             "Could not load the config file. It may not be well formed. Default values will be used."
         )
@@ -481,7 +481,7 @@ def main():
                     print(f"Unrecognized format {exp_format}")
             except NameError:
                 print("No query results to export.")
-            except (FileNotFoundError, OSError):
+            except (FileNotFoundError, OSError, PermissionError):
                 print(f"Failed to export to {filename}.{exp_format}")
         elif query.lower()[:9] == "getfields":
             vault_type = query.split(" ")[-1]
