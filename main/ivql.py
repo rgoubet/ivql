@@ -509,10 +509,10 @@ def main():
                     ],
                     inplace=True,
                 )  # Remove responseDetails columns (subqueries)
-                query_data = query_data.convert_dtypes().astype(object).fillna('')
+                query_data = query_data.convert_dtypes()
                 print(
                     tabulate(
-                        query_data,
+                        query_data.astype(object).fillna(''),
                         headers="keys",
                         tablefmt="github",
                         showindex=False,
