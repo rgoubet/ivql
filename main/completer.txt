@@ -91,6 +91,7 @@ select
 site__v
 size__sys
 skip
+source__vr
 source_doc_id__v
 source_major_version__v
 source_minor_version__v
@@ -102,6 +103,7 @@ study__v
 subtype__v
 supersededstate()
 system_group__sys
+target__vr
 target_doc_id__v
 target_major_version__v
 target_minor_version__v

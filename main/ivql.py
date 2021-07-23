@@ -1,3 +1,4 @@
+from numpy import dtype
 import pandas as pd
 import tabulate
 import requests
@@ -201,8 +202,8 @@ class custom_df(pd.DataFrame):
         return self
 
     @staticmethod
-    def cjson_normalize(data):
-        return custom_df(pd.json_normalize(data))
+    def cjson_normalize(data, **args):
+        return custom_df(pd.json_normalize(data, **args))
 
 
 def authorize(vault: str, user_name: str, password: str) -> session_details:
@@ -508,9 +509,10 @@ def main():
                     ],
                     inplace=True,
                 )  # Remove responseDetails columns (subqueries)
+                query_data = query_data.convert_dtypes().astype(object).fillna('')
                 print(
                     tabulate(
-                        query_data.fillna(""),
+                        query_data,
                         headers="keys",
                         tablefmt="github",
                         showindex=False,
