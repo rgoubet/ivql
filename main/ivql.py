@@ -84,6 +84,8 @@ class VqlLexer(RegexLexer):
                         "between",
                         "contains",
                         "find",
+                        "or",
+                        "and",
                     ),
                     suffix=r"\b",
                 ),
@@ -143,6 +145,15 @@ class VqlLexer(RegexLexer):
             (r"\b[^ ,]+__vr\b", Name.Attribute),
             ("id", Name.Attribute),
             (r"'[^']+'", String.Single),
+            (
+                words(
+                    (
+                        "true",
+                        "false",
+                    ),
+                ),
+                Keyword.Constant,
+            ),
             (r"\b[0-9]+\b", Number.Integer),
         ]
     }
@@ -151,6 +162,7 @@ class VqlLexer(RegexLexer):
 style = Style.from_dict(
     {
         "pygments.keyword": "crimson",
+        "pygments.keyword.constant": "blue",
         "pygments.name.attribute": "green",
         "pygments.operator": "teal",
         "pygments.string.single": "cyan",
@@ -197,8 +209,8 @@ class custom_df(pd.DataFrame):
                         ).drop(col, axis="columns")
                         processed = True
             self = self.reset_index(drop=True)
-            if not processed:
-                break
+            if not processed: # If no col was expanded
+                break # Exit the while loop
         return self
 
     @staticmethod
