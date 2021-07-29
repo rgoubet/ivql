@@ -1,4 +1,3 @@
-from numpy import dtype
 import pandas as pd
 import tabulate
 import requests
