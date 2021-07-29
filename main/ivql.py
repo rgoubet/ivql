@@ -208,8 +208,8 @@ class custom_df(pd.DataFrame):
                         ).drop(col, axis="columns")
                         processed = True
             self = self.reset_index(drop=True)
-            if not processed: # If no col was expanded
-                break # Exit the while loop
+            if not processed:  # If no col was expanded
+                break  # Exit the while loop
         return self
 
     @staticmethod
@@ -287,7 +287,12 @@ def get_config():
     If no config file is found, return defaults"""
     config = configparser.ConfigParser()
     # Set default config values
-    settings = {"delim": ",", "outdir": ".", "complete_while_typing": False}
+    settings = {
+        "delim": ",",
+        "outdir": ".",
+        "complete_while_typing": False,
+        "completer_file": "completer.txt",
+    }
     try:  # If the config file loads successfully (i.e. it is well-formed)
         config.read("ivql.ini")
         if config.has_option("DEFAULT", "delimiter"):
@@ -302,6 +307,9 @@ def get_config():
             settings["complete_while_typing"] = not eval(
                 config["DEFAULT"]["complete_on_tab"]
             )
+        if config.has_option("DEFAULT", "completer_file"):
+            settings["completer_file"] = config["DEFAULT"]["completer_file"]
+
     except (configparser.MissingSectionHeaderError, PermissionError, OSError):
         print(
             "Could not load the config file. It may not be well formed. Default values will be used."
@@ -428,7 +436,7 @@ def main():
 
     # Initiate the prompt with a completer if the lexicon file is found
     try:
-        with open("completer.txt", "r") as f:
+        with open(config["completer_file"], "r") as f:
             vql_completer = WordCompleter(f.read().splitlines())
         session = PromptSession(
             completer=vql_completer,
@@ -438,7 +446,7 @@ def main():
             style=style,
         )
     except FileNotFoundError:
-        print("No autocompletion configuration file found")
+        print(f"No autocompletion configuration file found ({config['completer_file']})")
         session = PromptSession(
             history=vql_history,
             complete_while_typing=config["complete_while_typing"],
@@ -523,7 +531,7 @@ def main():
                 query_data = query_data.convert_dtypes()
                 print(
                     tabulate(
-                        query_data.astype(object).fillna(''),
+                        query_data.astype(object).fillna(""),
                         headers="keys",
                         tablefmt="github",
                         showindex=False,

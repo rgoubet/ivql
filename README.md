@@ -1,7 +1,7 @@
 iVQL: Interactive VQL prompt
 ============================
 
-`iVQL` is an interactive VQL prompt similar to common command-line SQL clients. It supports auto-completion, history between sessions, display the results in a tabular format and export to CSV and raw JSON.
+`iVQL` is an interactive VQL prompt similar to common command-line SQL clients. It supports auto-completion, syntax highlighting, history between sessions, display the results in a tabular format and export to CSV and raw JSON.
 
 Tabular display and CSV export automatically flatten data structures from nested queries.
 
@@ -68,13 +68,15 @@ You can define the default settings for `outdir` and `delimiter` by specifying t
 delimiter = ,
 outdir = .
 complete_on_tab = True
+completer_file = completer.txt
 ```
 
 - `delimiter` defines the delimiter for CSV exports (`,` by default)
 - `outdir` defines the output directory for exports (current directory by default)
 - `complete_on_tab` defines the behavior of auto-completion:
   - If `True`, completion suggestions are displayed when pressing the Tab key
-  - If `False`, completion suggestions show up while typing
+  - If `False`, completion suggestions show up while typing (default)
+- `completer_file` defines the path and name of the auto-completion lexicon (`completer.txt` by default)
 
 # Note: VQL for SQL experts
 
