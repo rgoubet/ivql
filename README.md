@@ -1,9 +1,11 @@
 iVQL: Interactive VQL prompt
 ============================
 
-`iVQL` is an interactive VQL prompt similar to common command-line SQL clients. It supports auto-completion, syntax highlighting, history between sessions, display the results in a tabular format and export to CSV and raw JSON.
+`iVQL` is an interactive VQL prompt similar to common command-line SQL clients. It supports auto-completion, syntax highlighting, history between sessions, results display in a tabular format and export to CSV and raw JSON.
 
 Tabular display and CSV export automatically flatten data structures from nested queries.
+
+Auto-completion is based on a dictionary of terms in a text file (one term per line). This allows adding new terms without updating the code (e.g. in case of new features).
 
 `iVQL` always connects to the most recent Vault API version to support the latest features.
 
@@ -52,7 +54,7 @@ Sets the output directory for the results file. To set it back to the working di
 
 ## `getfields <documents|users|groups|object name>`
 
-Retrieves the list of (queryable) fields from the supplied object type and adds them to the auto-completion lexicon. The file `completer.txt` contains a predefined list of items.
+Retrieves the list of (queryable) fields from the supplied object type and adds them to the auto-completion dictionary. The file `completer.txt` contains a predefined list of items.
 
 ## `quit|exit`
 Quits the program
@@ -67,7 +69,7 @@ You can define the default settings for `outdir` and `delimiter` by specifying t
 [DEFAULT]
 delimiter = ,
 outdir = .
-complete_on_tab = True
+complete_on_tab = False
 completer_file = completer.txt
 ```
 
@@ -76,7 +78,7 @@ completer_file = completer.txt
 - `complete_on_tab` defines the behavior of auto-completion:
   - If `True`, completion suggestions are displayed when pressing the Tab key
   - If `False`, completion suggestions show up while typing (default)
-- `completer_file` defines the path and name of the auto-completion lexicon (`completer.txt` by default)
+- `completer_file` defines the path and name of the auto-completion dictionary (`completer.txt` by default)
 
 # Note: VQL for SQL experts
 

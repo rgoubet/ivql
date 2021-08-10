@@ -466,11 +466,11 @@ def main():
                 os.system("cls")
             else:
                 os.system("clear")
-        elif query == "delimiter":
+        elif query.lower() == "delimiter":
             print("Current delimiter: " + config["delim"])
         elif query.lower()[:9] == "delimiter":
             config["delim"] = query.split(" ")[-1]
-        elif query == "outdir":
+        elif query.lower() == "outdir":
             print("Current output folder: " + config["outdir"])
         elif query.lower()[:6] == "outdir":
             outdir = query.split(" ")[-1]
