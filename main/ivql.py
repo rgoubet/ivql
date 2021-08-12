@@ -83,6 +83,8 @@ class VqlLexer(RegexLexer):
                         "between",
                         "contains",
                         "find",
+                        "or",
+                        "and",
                     ),
                     suffix=r"\b",
                 ),
@@ -142,6 +144,15 @@ class VqlLexer(RegexLexer):
             (r"\b[^ ,]+__vr\b", Name.Attribute),
             ("id", Name.Attribute),
             (r"'[^']+'", String.Single),
+            (
+                words(
+                    (
+                        "true",
+                        "false",
+                    ),
+                ),
+                Keyword.Constant,
+            ),
             (r"\b[0-9]+\b", Number.Integer),
         ]
     }
@@ -150,6 +161,7 @@ class VqlLexer(RegexLexer):
 style = Style.from_dict(
     {
         "pygments.keyword": "crimson",
+        "pygments.keyword.constant": "blue",
         "pygments.name.attribute": "green",
         "pygments.operator": "teal",
         "pygments.string.single": "cyan",
@@ -196,13 +208,13 @@ class custom_df(pd.DataFrame):
                         ).drop(col, axis="columns")
                         processed = True
             self = self.reset_index(drop=True)
-            if not processed:
-                break
+            if not processed:  # If no col was expanded
+                break  # Exit the while loop
         return self
 
     @staticmethod
-    def cjson_normalize(data):
-        return custom_df(pd.json_normalize(data))
+    def cjson_normalize(data, **args):
+        return custom_df(pd.json_normalize(data, **args))
 
 
 def authorize(vault: str, user_name: str, password: str) -> session_details:
@@ -220,9 +232,7 @@ def authorize(vault: str, user_name: str, password: str) -> session_details:
         auth_response_json = auth.json()
         if auth_response_json["responseStatus"] == "FAILURE":
             raise AuthenticationException(
-                "Authentication error: "
-                + auth_response_json["errors"][0]["message"]
-                + f"with {password}"
+                "Authentication error: " + auth_response_json["errors"][0]["message"]
             )
         else:
             sessionId = auth_response_json["sessionId"]
@@ -266,6 +276,7 @@ def parse_args():
 
 
 def createFolder(directory):
+    """Create directory if it does not exists"""
     try:
         if not os.path.exists(directory):
             os.makedirs(directory)
@@ -289,7 +300,12 @@ def get_config():
     If no config file is found, return defaults"""
     config = configparser.ConfigParser()
     # Set default config values
-    settings = {"delim": ",", "outdir": ".", "complete_while_typing": False}
+    settings = {
+        "delim": ",",
+        "outdir": ".",
+        "complete_while_typing": False,
+        "completer_file": "completer.txt",
+    }
     try:  # If the config file loads successfully (i.e. it is well-formed)
         config.read("ivql.ini")
         if config.has_option("DEFAULT", "delimiter"):
@@ -304,7 +320,10 @@ def get_config():
             settings["complete_while_typing"] = not eval(
                 config["DEFAULT"]["complete_on_tab"]
             )
-    except configparser.MissingSectionHeaderError:
+        if config.has_option("DEFAULT", "completer_file"):
+            settings["completer_file"] = config["DEFAULT"]["completer_file"]
+
+    except (configparser.MissingSectionHeaderError, PermissionError, OSError):
         print(
             "Could not load the config file. It may not be well formed. Default values will be used."
         )
@@ -359,6 +378,8 @@ def execute_vql(
 
 
 def get_fields(session, vault_type):
+    """Returns a list of fields and relationships for the supplied
+    Vault type (documents, users, groups, workflows...)"""
     if vault_type == "documents":
         url = session.mainvault[2] + f"/metadata/objects/{vault_type}/properties"
         r = requests.get(url, headers={"Authorization": session.sessionId})
@@ -396,7 +417,13 @@ def get_fields(session, vault_type):
             print(r.json()["errors"][0]["message"])
             return []
         else:
-            return [p["name"] for p in r.json()["object"]["fields"]]
+            obj_fields = [p["name"] for p in r.json()["object"]["fields"]]
+            if "relationships" in r.json()["object"].keys():
+                obj_rel = [
+                    p["relationship_name"] for p in r.json()["object"]["relationships"]
+                ]
+                obj_fields.extend(obj_rel)
+            return obj_fields
 
 
 def main():
@@ -422,19 +449,18 @@ def main():
 
     # Initiate the prompt with a completer if the lexicon file is found
     try:
-        with open("completer.txt", "r") as f:
+        with open(config["completer_file"], "r") as f:
             vql_completer = WordCompleter(f.read().splitlines())
-    except FileNotFoundError:
-        print("No autocompletion configuration file found")
         session = PromptSession(
+            completer=vql_completer,
             history=vql_history,
             complete_while_typing=config["complete_while_typing"],
             lexer=PygmentsLexer(VqlLexer),
             style=style,
         )
-    else:
+    except FileNotFoundError:
+        print(f"No autocompletion configuration file found ({config['completer_file']})")
         session = PromptSession(
-            completer=vql_completer,
             history=vql_history,
             complete_while_typing=config["complete_while_typing"],
             lexer=PygmentsLexer(VqlLexer),
@@ -453,11 +479,11 @@ def main():
                 os.system("cls")
             else:
                 os.system("clear")
-        elif query == "delimiter":
+        elif query.lower() == "delimiter":
             print("Current delimiter: " + config["delim"])
         elif query.lower()[:9] == "delimiter":
             config["delim"] = query.split(" ")[-1]
-        elif query == "outdir":
+        elif query.lower() == "outdir":
             print("Current output folder: " + config["outdir"])
         elif query.lower()[:6] == "outdir":
             outdir = query.split(" ")[-1]
@@ -487,7 +513,7 @@ def main():
                     print(f"Unrecognized format {exp_format}")
             except NameError:
                 print("No query results to export.")
-            except (FileNotFoundError, OSError):
+            except (FileNotFoundError, OSError, PermissionError):
                 print(f"Failed to export to {filename}.{exp_format}")
         elif query.lower()[:9] == "getfields":
             vault_type = query.split(" ")[-1]
@@ -502,14 +528,23 @@ def main():
             vql_results = execute_vql(vault_session, query)
             if vql_results["responseStatus"] == "FAILURE":
                 print(
-                    f"Error: {vql_results['errors'][0]['type']}: {vql_results['errors'][0]['message']}"
+                    vql_results["errors"][0]["type"]
+                    + ": "
+                    + vql_results["errors"][0]["message"]
                 )
             else:
                 query_data = custom_df.cjson_normalize(vql_results["data"])
                 query_data = query_data.expand()
+                query_data.drop(
+                    columns=[
+                        col for col in query_data.columns if "responseDetails" in col
+                    ],
+                    inplace=True,
+                )  # Remove responseDetails columns (subqueries)
+                query_data = query_data.convert_dtypes()
                 print(
                     tabulate(
-                        query_data.fillna(""),
+                        query_data.astype(object).fillna(""),
                         headers="keys",
                         tablefmt="github",
                         showindex=False,
