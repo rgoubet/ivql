@@ -260,7 +260,9 @@ def parse_args():
     parser.add_argument("-u", "--user", help="User name")
     parser.add_argument("-p", "--password", help="Password")
     parser.add_argument("vault", help='Vault server, excluding ".veevavault.com"')
-    return parser.parse_args()
+    args = parser.parse_args()
+    vars(args)["prog"] = parser.prog
+    return args
 
 
 def createFolder(directory):
@@ -269,6 +271,17 @@ def createFolder(directory):
             os.makedirs(directory)
     except OSError:
         raise
+
+
+def app_folder(prog):
+    if sys.platform == "win32":
+        folder = os.path.join(os.path.expanduser("~"), "AppData", "Local", prog)
+        createFolder(folder)
+        return folder
+    else:
+        folder = os.path.join(os.path.expanduser("~"), "." + prog)
+        createFolder(folder)
+        return folder
 
 
 def get_config():
@@ -405,7 +418,7 @@ def main():
     ) as e:
         sys.exit(e)
 
-    vql_history = FileHistory("ivql.history")
+    vql_history = FileHistory(os.path.join(app_folder(args.prog), "history"))
 
     # Initiate the prompt with a completer if the lexicon file is found
     try:
