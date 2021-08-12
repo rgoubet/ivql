@@ -284,7 +284,7 @@ def createFolder(directory):
         raise
 
 
-def app_folder(prog):
+def app_folder(prog: str) -> str:
     if sys.platform == "win32":
         folder = os.path.join(os.path.expanduser("~"), "AppData", "Local", prog)
         createFolder(folder)
