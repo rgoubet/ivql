@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from http.client import responses
 from urllib.parse import urlparse
 from tabulate import tabulate
+from getpass import getpass
 from prompt_toolkit import PromptSession
 from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.history import FileHistory
@@ -431,7 +432,7 @@ def main():
     if args.user is None:
         args.user = input("User name: ")
     if args.password is None:
-        args.password = input("Password: ")
+        args.password = getpass()
 
     config = get_config()  # Get config settings
 
