@@ -324,7 +324,7 @@ def get_config():
         if config.has_option("DEFAULT", "completer_file"):
             settings["completer_file"] = config["DEFAULT"]["completer_file"]
 
-    except (configparser.MissingSectionHeaderError, PermissionError, OSError):
+    except (configparser.Error, PermissionError, OSError):
         print(
             "Could not load the config file. It may not be well formed. Default values will be used."
         )
