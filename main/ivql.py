@@ -334,15 +334,11 @@ def get_config():
 def execute_vql(
     session: session_details,
     vql_query: str,
-    pages: int = 0,
-    tokenize: bool = False,
 ) -> dict:
     """Execute a VQL query and return results"""
     try:
         payload = {"q": vql_query}
         http_params = {}
-        if tokenize:
-            http_params["tokenize"] = str(tokenize)
         r = requests.post(
             session.mainvault[2] + "/query",
             params=http_params,
@@ -359,8 +355,8 @@ def execute_vql(
             "responseDetails" in results
         ):  # The response might be a failure and not contain this object
             i = 1
-            while "next_page" in response["responseDetails"] and (
-                i < pages or pages == 0
+            while (
+                "next_page" in response["responseDetails"]
             ):  # Check if there is a next page
                 i += 1
                 print("Fetching page " + str(i))
@@ -460,7 +456,9 @@ def main():
             style=style,
         )
     except FileNotFoundError:
-        print(f"No autocompletion configuration file found ({config['completer_file']})")
+        print(
+            f"No autocompletion configuration file found ({config['completer_file']})"
+        )
         session = PromptSession(
             history=vql_history,
             complete_while_typing=config["complete_while_typing"],
