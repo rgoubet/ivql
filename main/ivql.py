@@ -175,7 +175,11 @@ style = Style.from_dict(
 
 
 class custom_df(pd.DataFrame):
-    """Custom subclass of pandas with extra method"""
+    """Custom subclass of pandas with extra method
+
+    Args:
+        DataFrame: a pandas DataFrame object
+    """
 
     def __init__(self, *args):
         pd.DataFrame.__init__(self, *args)
@@ -219,10 +223,22 @@ class custom_df(pd.DataFrame):
 
 
 def authorize(vault: str, user_name: str, password: str) -> session_details:
-    """
-    Authenticates in the specified Vault and returns a session
+    """Authenticates in the specified Vault and returns a session
     details object.
     In case authentication fails, raises a custom exception
+
+
+    Args:
+        vault (str): DNS name of the Vaylt
+        user_name (str): User name
+        password (str): Password
+
+    Raises:
+        HttpException: Exception in case of connection error
+        AuthenticationException: Exception in case of authentication error
+
+    Returns:
+        session_details: a session details objet with Vault details
     """
     try:
         param = {"username": user_name, "password": password}
@@ -286,6 +302,15 @@ def createFolder(directory):
 
 
 def app_folder(prog: str) -> str:
+    """Returns the location for application files
+    depending on the platform
+
+    Args:
+        prog (str): Name of the program
+
+    Returns:
+        str: Path to the program's application folder
+    """
     if sys.platform == "win32":
         folder = os.path.join(os.path.expanduser("~"), "AppData", "Local", prog)
         createFolder(folder)
@@ -296,9 +321,15 @@ def app_folder(prog: str) -> str:
         return folder
 
 
-def get_config():
-    """Return the configuration from the config file
-    If no config file is found, return defaults"""
+def get_config(cfg_file: str) -> dict:
+    """Parses the config file and returns the settings
+
+    Args:
+        cfg_file (str): path to the config file
+
+    Returns:
+        dict: configuration settings
+    """
     config = configparser.ConfigParser()
     # Set default config values
     settings = {
@@ -308,7 +339,7 @@ def get_config():
         "completer_file": "completer.txt",
     }
     try:  # If the config file loads successfully (i.e. it is well-formed)
-        config.read("ivql.ini")
+        config.read(cfg_file)
         if config.has_option("DEFAULT", "delimiter"):
             settings["delim"] = config["DEFAULT"]["delimiter"]
         if config.has_option("DEFAULT", "outdir"):
@@ -335,7 +366,15 @@ def execute_vql(
     session: session_details,
     vql_query: str,
 ) -> dict:
-    """Execute a VQL query and return results"""
+    """Execute a VQL statement and return the results
+
+    Args:
+        session (session_details): Vault session object
+        vql_query (str): the VQL query
+
+    Returns:
+        dict: results in JSON
+    """
     try:
         payload = {"q": vql_query}
         http_params = {}
@@ -374,9 +413,17 @@ def execute_vql(
         return {"error": "Connection Error"}
 
 
-def get_fields(session, vault_type):
+def get_fields(session: session_details, vault_type: str) -> list:
     """Returns a list of fields and relationships for the supplied
-    Vault type (documents, users, groups, workflows...)"""
+    Vault type (documents, users, groups, workflows...)
+
+    Args:
+        session (session_details): Vault session
+        vault_type (str): Vault type name
+
+    Returns:
+        list: List of fields and relationships
+    """
     if vault_type == "documents":
         url = session.mainvault[2] + f"/metadata/objects/{vault_type}/properties"
         r = requests.get(url, headers={"Authorization": session.sessionId})
@@ -430,7 +477,7 @@ def main():
     if args.password is None:
         args.password = getpass()
 
-    config = get_config()  # Get config settings
+    config = get_config("ivql.ini")  # Get config settings
 
     # Get a Vault session
     try:
