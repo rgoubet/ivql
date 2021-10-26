@@ -564,8 +564,10 @@ def main():
         elif query.lower()[:9] == "getfields":
             vault_type = query.split(" ")[-1]
             qfields = get_fields(vault_session, vault_type.lower())
+            added_fields = [f for f in qfields if f not in vql_completer.words]
+            print('Adding fields:\n' + ', '.join(added_fields))
             vql_completer.words.extend(
-                [f for f in qfields if f not in vql_completer.words]
+                added_fields
             )
             vql_completer.words.sort()
         elif query.lower()[:6] != "select":
