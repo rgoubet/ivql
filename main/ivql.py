@@ -1,5 +1,4 @@
 import pandas as pd
-import tabulate
 import requests
 import json
 import argparse
