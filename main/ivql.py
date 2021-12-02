@@ -246,7 +246,7 @@ def authorize(vault: str, user_name: str, password: str) -> session_details:
         if auth.status_code != 200:
             raise HttpException(responses[auth.status_code])
         auth_response_json = auth.json()
-        if auth_response_json["responseStatus"] == "FAILURE":
+        if auth_response_json["responseStatus"] in ("FAILURE", "EXCEPTION"):
             raise AuthenticationException(
                 "Authentication error: " + auth_response_json["errors"][0]["message"]
             )
@@ -385,7 +385,7 @@ def execute_vql(
         )
         response = r.json()
         results = response
-        if results["responseStatus"] != "FAILURE":
+        if results["responseStatus"] not in ("FAILURE", "EXCEPTION"):
             print(results["responseStatus"])
             print("Number of results: " + str(results["responseDetails"]["total"]))
             print("Fetching page 1")
@@ -426,7 +426,7 @@ def get_fields(session: session_details, vault_type: str) -> list:
     if vault_type == "documents":
         url = session.mainvault[2] + f"/metadata/objects/{vault_type}/properties"
         r = requests.get(url, headers={"Authorization": session.sessionId})
-        if r.json()["responseStatus"] == "FAILURE":
+        if r.json()["responseStatus"] in ("FAILURE", "EXCEPTION"):
             print(r.json()["errors"][0]["message"])
             return []
         else:
@@ -440,7 +440,7 @@ def get_fields(session: session_details, vault_type: str) -> list:
     elif vault_type in ["users", "groups"]:
         url = session.mainvault[2] + f"/metadata/objects/{vault_type}"
         r = requests.get(url, headers={"Authorization": session.sessionId})
-        if r.json()["responseStatus"] == "FAILURE":
+        if r.json()["responseStatus"] in ("FAILURE", "EXCEPTION"):
             print(r.json()["errors"][0]["message"])
             return []
         else:
@@ -448,7 +448,7 @@ def get_fields(session: session_details, vault_type: str) -> list:
     elif vault_type == "workflows":
         url = session.mainvault[2] + f"/metadata/objects/{vault_type}"
         r = requests.get(url, headers={"Authorization": session.sessionId})
-        if r.json()["responseStatus"] == "FAILURE":
+        if r.json()["responseStatus"] in ("FAILURE", "EXCEPTION"):
             print(r.json()["errors"][0]["message"])
             return []
         else:
@@ -456,7 +456,7 @@ def get_fields(session: session_details, vault_type: str) -> list:
     else:
         url = session.mainvault[2] + f"/metadata/vobjects/{vault_type}"
         r = requests.get(url, headers={"Authorization": session.sessionId})
-        if r.json()["responseStatus"] == "FAILURE":
+        if r.json()["responseStatus"] in ("FAILURE", "EXCEPTION"):
             print(r.json()["errors"][0]["message"])
             return []
         else:
@@ -571,7 +571,7 @@ def main():
             print("Not a select statement or known command.")
         else:
             vql_results = execute_vql(vault_session, query)
-            if vql_results["responseStatus"] == "FAILURE":
+            if vql_results["responseStatus"] in ("FAILURE", "EXCEPTION"):
                 print(
                     vql_results["errors"][0]["type"]
                     + ": "
