@@ -564,10 +564,8 @@ def main():
             vault_type = query.split(" ")[-1]
             qfields = get_fields(vault_session, vault_type.lower())
             added_fields = [f for f in qfields if f not in vql_completer.words]
-            print('Adding fields:\n' + ', '.join(added_fields))
-            vql_completer.words.extend(
-                added_fields
-            )
+            print("Adding fields:\n" + ", ".join(added_fields))
+            vql_completer.words.extend(added_fields)
             vql_completer.words.sort()
         elif query.lower()[:6] != "select":
             print("Not a select statement or known command.")
@@ -579,6 +577,16 @@ def main():
                     + ": "
                     + vql_results["errors"][0]["message"]
                 )
+                if vql_results["errors"][0]["type"] == "INVALID_SESSION_ID":
+                    print("Reconnecting...")
+                    try:
+                        vault_session = authorize(args.vault, args.user, args.password)
+                    except (
+                        requests.exceptions.ConnectionError,
+                        HttpException,
+                        AuthenticationException,
+                    ) as e:
+                        sys.exit(e)
             else:
                 query_data = custom_df.cjson_normalize(vql_results["data"])
                 query_data = query_data.expand()
