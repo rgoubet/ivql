@@ -34,7 +34,7 @@ Note that iVQL does not support single sign-on.
 The prompt takes either a `SELECT` [VQL statement](http://developer.veevavault.com/vql), or one of the following commands. All commands are non-case-sensitive.
 
 ## `export <json|csv>`
-Export the results of the last queries to a `JSON` or `CSV` file. The filename is defined using the current time value.
+Export the results of the last query to a `JSON` or `CSV` file. The filename is defined using the current time value.
 
 ## `delimiter <char>`
 Default `,`
@@ -133,7 +133,7 @@ SELECT id,
          user_name__v
 FROM users
 WHERE active__v = TRUE
-        AND last_login__v != NULL
+        AND last_login__v = NULL
 ```
 
 List document numbers for two products, including the product name.
