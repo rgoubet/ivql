@@ -567,8 +567,10 @@ def main():
                 added_fields = [f for f in qfields if f not in vql_completer.words]
                 if len(added_fields) > 0:
                     print("Adding fields:\n" + ", ".join(added_fields))
-                vql_completer.words.extend(added_fields)
-                vql_completer.words.sort()
+                    vql_completer.words.extend(added_fields)
+                    vql_completer.words.sort()
+                else:
+                    print("No field added.")
             except NameError:
                 print("Completer not initialized.")
         elif query.lower()[:6] != "select":
