@@ -563,11 +563,14 @@ def main():
         elif query.lower()[:9] == "getfields":
             vault_type = query.split(" ")[-1]
             qfields = get_fields(vault_session, vault_type.lower())
-            added_fields = [f for f in qfields if f not in vql_completer.words]
-            if len(added_fields) > 0:
-                print("Adding fields:\n" + ", ".join(added_fields))
-            vql_completer.words.extend(added_fields)
-            vql_completer.words.sort()
+            try:
+                added_fields = [f for f in qfields if f not in vql_completer.words]
+                if len(added_fields) > 0:
+                    print("Adding fields:\n" + ", ".join(added_fields))
+                vql_completer.words.extend(added_fields)
+                vql_completer.words.sort()
+            except NameError:
+                print("Completer not initialized.")
         elif query.lower()[:6] != "select":
             print("Not a select statement or known command.")
         else:
