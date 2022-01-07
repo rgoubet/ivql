@@ -605,7 +605,7 @@ def main():
                 query_data = query_data.convert_dtypes()
                 print(
                     tabulate(
-                        query_data.astype(object).fillna(""),
+                        query_data.astype(object).fillna("").head(50),
                         headers="keys",
                         tablefmt="github",
                         showindex=False,
