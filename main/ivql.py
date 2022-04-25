@@ -272,7 +272,7 @@ def authorize(vault: str, user_name: str, password: str) -> session_details:
                         vault_details["name"],
                         vault_details["url"] + "/" + latest_api,
                     )
-            print(f"Authenticated in {mainvault[1]}")
+            print(f"Authenticated in {mainvault[1]} on API {latest_api}.")
             return session_details(sessionId, mainvault, allvaults)
     except:
         raise
