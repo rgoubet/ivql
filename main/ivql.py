@@ -20,6 +20,7 @@ from prompt_toolkit.lexers import PygmentsLexer
 from prompt_toolkit.styles import Style
 from pygments.token import Keyword, Operator, Name, String, Number
 from pygments.lexer import RegexLexer, words
+from appdirs import user_config_dir
 
 
 class AuthenticationException(Exception):
@@ -300,26 +301,6 @@ def createFolder(directory):
         raise
 
 
-def app_folder(prog: str) -> str:
-    """Returns the location for application files
-    depending on the platform
-
-    Args:
-        prog (str): Name of the program
-
-    Returns:
-        str: Path to the program's application folder
-    """
-    if sys.platform == "win32":
-        folder = os.path.join(os.path.expanduser("~"), "AppData", "Local", prog)
-        createFolder(folder)
-        return folder
-    else:
-        folder = os.path.join(os.path.expanduser("~"), "." + prog)
-        createFolder(folder)
-        return folder
-
-
 def get_config(cfg_file: str) -> dict:
     """Parses the config file and returns the settings
 
@@ -488,7 +469,9 @@ def main():
     ) as e:
         sys.exit(e)
 
-    vql_history = FileHistory(os.path.join(app_folder(args.prog), "history"))
+    createFolder(user_config_dir("ivql"))
+
+    vql_history = FileHistory(os.path.join(user_config_dir("ivql"), "history"))
 
     # Initiate the prompt with a completer if the lexicon file is found
     try:
