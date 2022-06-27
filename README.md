@@ -151,3 +151,16 @@ WHERE product__v IN
             OR name__v = 'Corxane') 
 ```
 
+List active users with associated application roles from user roles:
+
+```sql
+SELECT id,
+       name__v,
+       username__sys,
+       federated_id__sys,
+       security_profile__sysr.name__v,
+  (SELECT application_role__sysr.name__v
+   FROM user_role__sysr)
+FROM user__sys
+WHERE status__v = 'active__v'
+```

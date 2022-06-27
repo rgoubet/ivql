@@ -188,14 +188,12 @@ class custom_df(pd.DataFrame):
         """Expand columns containing dictionaries horizontally
         and columns containing lists vertically"""
 
-        def expand_col(col, sep="_"):
+        def expand_col(col):
             """ "Horizontal" equivalent of pandas' vertical
             explode() function"""
             df = col.apply(pd.Series)
             if 0 in df.columns:  # this occurs for NaN rows
                 df.drop(columns=0, inplace=True)
-            mapping = {newcol: f"{col.name}{sep}{newcol}" for newcol in df.columns}
-            df.rename(mapping, axis="columns", inplace=True)
             return df
 
         while True:
