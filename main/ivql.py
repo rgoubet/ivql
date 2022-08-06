@@ -34,9 +34,7 @@ class HttpException(Exception):
 @dataclass
 class session_details:
     sessionId: str
-    mainvault: tuple
-    allvaults: list
-
+    api: str
 
 class VqlLexer(RegexLexer):
     name = "VQL"
@@ -220,7 +218,9 @@ class custom_df(pd.DataFrame):
         return custom_df(pd.json_normalize(data, **args))
 
 
-def authorize(vault: str, user_name: str, password: str) -> session_details:
+def authorize(
+    vault: str, user_name="", password="", sso=False, browser="chrome"
+) -> session_details:
     """Authenticates in the specified Vault and returns a session
     details object.
     In case authentication fails, raises a custom exception
@@ -238,41 +238,55 @@ def authorize(vault: str, user_name: str, password: str) -> session_details:
     Returns:
         session_details: a session details objet with Vault details
     """
+    if sso:
+        from selenium import webdriver
+        from selenium.webdriver.support.ui import WebDriverWait
+        from selenium.common.exceptions import (
+            WebDriverException,
+            SessionNotCreatedException,
+        )
+        try:
+            match browser:
+                case "chrome":
+                    driver = webdriver.Chrome()
+                case "edge":
+                    driver = webdriver.Edge()
+                case "firefox":
+                    driver = webdriver.Firefox()
+                case "safari":
+                    driver = webdriver.Safari()
+        except SessionNotCreatedException as e:
+            sys.exit(e)
+        except WebDriverException as e:
+            sys.exit(e)
+
     try:
-        param = {"username": user_name, "password": password}
-        url = f"https://{vault}.veevavault.com/api/v21.1/auth"
-        auth = requests.post(url, params=param)
-        if auth.status_code != 200:
-            raise HttpException(responses[auth.status_code])
-        auth_response_json = auth.json()
-        if auth_response_json["responseStatus"] in ("FAILURE", "EXCEPTION"):
-            raise AuthenticationException(
-                "Authentication error: " + auth_response_json["errors"][0]["message"]
-            )
+        if sso:
+            driver.get(f"https://{vault}.veevavault.com/")
+            try:
+                sessionId = WebDriverWait(driver, timeout=60).until(lambda d: d.get_cookie('TK'))['value']
+            except WebDriverException:
+                sys.exit('Browser closed unexpectedly')
         else:
-            sessionId = auth_response_json["sessionId"]
-            api_url = "https://" + vault + ".veevavault.com/api"
-            r = requests.get(api_url, headers={"Authorization": sessionId})
-            all_api = r.json()["values"]
-            latest_api = list(all_api)[-1]
-            mainvault = tuple()
-            allvaults = list()
-            for vault_details in auth_response_json["vaultIds"]:
-                allvaults.append(
-                    (
-                        vault_details["id"],
-                        vault_details["name"],
-                        vault_details["url"] + "/" + latest_api,
-                    )
+            param = {"username": user_name, "password": password}
+            url = f"https://{vault}.veevavault.com/api/v22.1/auth"
+            auth = requests.post(url, params=param)
+            if auth.status_code != 200:
+                raise HttpException(responses[auth.status_code])
+            auth_response_json = auth.json()
+            if auth_response_json["responseStatus"] in ("FAILURE", "EXCEPTION"):
+                raise AuthenticationException(
+                    "Authentication error: "
+                    + auth_response_json["errors"][0]["message"]
                 )
-                if vault_details["id"] == auth_response_json["vaultId"]:
-                    mainvault = (
-                        vault_details["id"],
-                        vault_details["name"],
-                        vault_details["url"] + "/" + latest_api,
-                    )
-            print(f"Authenticated in {mainvault[1]} on API {latest_api}.")
-            return session_details(sessionId, mainvault, allvaults)
+            else:
+                sessionId = auth_response_json["sessionId"]
+        api_url = "https://" + vault + ".veevavault.com/api"
+        r = requests.get(api_url, headers={"Authorization": sessionId})
+        all_api = r.json()["values"]
+        latest_api = list(all_api.values())[-1]
+        print(f"Authenticated in {vault} on API {latest_api}.")
+        return session_details(sessionId, latest_api)
     except:
         raise
 
@@ -284,6 +298,20 @@ def parse_args():
     )
     parser.add_argument("-u", "--user", help="User name")
     parser.add_argument("-p", "--password", help="Password")
+    parser.add_argument(
+        "-s",
+        "--sso",
+        action="store_true",
+        default=False,
+        help="Authenticate with Single Sign-On (SSO)",
+    )
+    parser.add_argument(
+        "-b",
+        "--browser",
+        choices=["chrome", "edge", "firefox", "safari"],
+        default="chrome",
+        help="Browser to use for SSO authentication",
+    )
     parser.add_argument("vault", help='Vault server, excluding ".veevavault.com"')
     args = parser.parse_args()
     vars(args)["prog"] = parser.prog
@@ -357,7 +385,7 @@ def execute_vql(
         payload = {"q": vql_query}
         http_params = {}
         r = requests.post(
-            session.mainvault[2] + "/query",
+            session.api + "/query",
             params=http_params,
             data=payload,
             headers={"Authorization": session.sessionId},
@@ -379,7 +407,7 @@ def execute_vql(
                 print("Fetching page " + str(i))
                 r = requests.get(
                     "https://"
-                    + urlparse(session.mainvault[2]).netloc
+                    + urlparse(session.api).netloc
                     + response["responseDetails"]["next_page"],
                     headers={"Authorization": session.sessionId},
                 )
@@ -403,7 +431,7 @@ def get_fields(session: session_details, vault_type: str) -> list:
         list: List of fields and relationships
     """
     if vault_type == "documents":
-        url = session.mainvault[2] + f"/metadata/objects/{vault_type}/properties"
+        url = session.api + f"/metadata/objects/{vault_type}/properties"
         r = requests.get(url, headers={"Authorization": session.sessionId})
         if r.json()["responseStatus"] in ("FAILURE", "EXCEPTION"):
             print(r.json()["errors"][0]["message"])
@@ -417,7 +445,7 @@ def get_fields(session: session_details, vault_type: str) -> list:
             ]
             return docfields + docrelation
     elif vault_type in ["users", "groups"]:
-        url = session.mainvault[2] + f"/metadata/objects/{vault_type}"
+        url = session.api + f"/metadata/objects/{vault_type}"
         r = requests.get(url, headers={"Authorization": session.sessionId})
         if r.json()["responseStatus"] in ("FAILURE", "EXCEPTION"):
             print(r.json()["errors"][0]["message"])
@@ -425,7 +453,7 @@ def get_fields(session: session_details, vault_type: str) -> list:
         else:
             return [p["name"] for p in r.json()["properties"] if p["queryable"]]
     elif vault_type == "workflows":
-        url = session.mainvault[2] + f"/metadata/objects/{vault_type}"
+        url = session.api + f"/metadata/objects/{vault_type}"
         r = requests.get(url, headers={"Authorization": session.sessionId})
         if r.json()["responseStatus"] in ("FAILURE", "EXCEPTION"):
             print(r.json()["errors"][0]["message"])
@@ -433,7 +461,7 @@ def get_fields(session: session_details, vault_type: str) -> list:
         else:
             return [p["name"] for p in r.json()["properties"]]
     else:
-        url = session.mainvault[2] + f"/metadata/vobjects/{vault_type}"
+        url = session.api + f"/metadata/vobjects/{vault_type}"
         r = requests.get(url, headers={"Authorization": session.sessionId})
         if r.json()["responseStatus"] in ("FAILURE", "EXCEPTION"):
             print(r.json()["errors"][0]["message"])
@@ -450,16 +478,20 @@ def get_fields(session: session_details, vault_type: str) -> list:
 
 def main():
     args = parse_args()  # get command line arguments
-    if args.user is None:
-        args.user = input("User name: ")
-    if args.password is None:
-        args.password = getpass()
+    if not args.sso:
+        if args.user is None:
+            args.user = input("User name: ")
+        if args.password is None:
+            args.password = getpass()
 
     config = get_config("ivql.ini")  # Get config settings
 
     # Get a Vault session
     try:
-        vault_session = authorize(args.vault, args.user, args.password)
+        if args.sso:
+            vault_session = authorize(args.vault, sso=True, browser=args.browser)
+        else:
+            vault_session = authorize(args.vault, args.user, args.password)
     except (
         requests.exceptions.ConnectionError,
         HttpException,
