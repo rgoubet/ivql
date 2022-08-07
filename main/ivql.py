@@ -605,7 +605,10 @@ def main():
                 if vql_results["errors"][0]["type"] == "INVALID_SESSION_ID":
                     print("Reconnecting...")
                     try:
-                        vault_session = authorize(args.vault, args.user, args.password)
+                        if args.sso:
+                            vault_session = authorize(args.vault, sso=True, browser=args.browser)
+                        else:
+                            vault_session = authorize(args.vault, args.user, args.password)
                     except (
                         requests.exceptions.ConnectionError,
                         HttpException,
