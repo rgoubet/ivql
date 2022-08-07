@@ -36,6 +36,7 @@ class session_details:
     sessionId: str
     api: str
 
+
 class VqlLexer(RegexLexer):
     name = "VQL"
     aliases = ["vql"]
@@ -245,6 +246,7 @@ def authorize(
             WebDriverException,
             SessionNotCreatedException,
         )
+
         try:
             match browser:
                 case "chrome":
@@ -255,20 +257,21 @@ def authorize(
                     driver = webdriver.Firefox()
                 case "safari":
                     driver = webdriver.Safari()
-        except SessionNotCreatedException as e:
-            sys.exit(e)
-        except WebDriverException as e:
-            sys.exit(e)
-        except Exception as e:
+        except (SessionNotCreatedException, WebDriverException, Exception) as e:
             sys.exit(e)
 
     try:
         if sso:
-            driver.get(f"https://{vault}.veevavault.com/")
             try:
-                sessionId = WebDriverWait(driver, timeout=60).until(lambda d: d.get_cookie('TK'))['value']
+                driver.get(f"https://{vault}.veevavault.com/")
+            except WebDriverException as e:
+                sys.exit(e)
+            try:
+                sessionId = WebDriverWait(driver, timeout=60).until(
+                    lambda d: d.get_cookie("TK")
+                )["value"]
             except WebDriverException:
-                sys.exit('Browser closed unexpectedly')
+                sys.exit("Browser closed unexpectedly")
         else:
             param = {"username": user_name, "password": password}
             url = f"https://{vault}.veevavault.com/api/v22.2/auth"
