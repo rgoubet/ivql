@@ -12,23 +12,34 @@ Auto-completion is based on a dictionary of terms in a text file (one term per l
 # 1. Usage
 
 ```
-usage: ivql [-h] [-u USER] [-p PASSWORD] vault
+usage: ivql [-h] [-u USER] [-p PASSWORD] [-s]
+            [-b {chrome,edge,firefox,safari}]
+            vault
 
 An interactive VQL prompt
 
 positional arguments:
   vault                 Vault server, excluding ".veevavault.com"
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   -u USER, --user USER  User name
   -p PASSWORD, --password PASSWORD
                         Password
+  -s, --sso             Authenticate with Single Sign-On (SSO)
+  -b {chrome,edge,firefox,safari}, --browser {chrome,edge,firefox,safari}
+                        Browser to use for SSO authentication
+
 ```
 
-If `USER` or `PASSWORD` is missing, it will be requested at the prompt.
+Unless single sign-on is selected, if `USER` or `PASSWORD` is missing, it will be requested at the prompt.
 
-Note that iVQL does not support single sign-on.
+> ## About Single Sign-On
+> `iVQL` uses [Selenium](https://www.selenium.dev/) to perform SSO authentication using a browser. The WebDriver for the selected browser must be available on the system:
+> - Chrome: https://chromedriver.chromium.org
+> - Edge: https://developer.microsoft.com/en-us/microsoft-edge/tools/webdriver/
+> - Firefox: https://github.com/mozilla/geckodriver
+> - Safari: https://developer.apple.com/safari/resources/
 
 # 2. Prompt input
 The prompt takes either a `SELECT` [VQL statement](http://developer.veevavault.com/vql), or one of the following commands. All commands are non-case-sensitive.

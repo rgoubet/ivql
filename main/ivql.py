@@ -259,6 +259,8 @@ def authorize(
             sys.exit(e)
         except WebDriverException as e:
             sys.exit(e)
+        except Exception as e:
+            sys.exit(e)
 
     try:
         if sso:
@@ -269,7 +271,7 @@ def authorize(
                 sys.exit('Browser closed unexpectedly')
         else:
             param = {"username": user_name, "password": password}
-            url = f"https://{vault}.veevavault.com/api/v22.1/auth"
+            url = f"https://{vault}.veevavault.com/api/v22.2/auth"
             auth = requests.post(url, params=param)
             if auth.status_code != 200:
                 raise HttpException(responses[auth.status_code])
