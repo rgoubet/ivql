@@ -270,6 +270,7 @@ def authorize(
                 sessionId = WebDriverWait(driver, timeout=60).until(
                     lambda d: d.get_cookie("TK")
                 )["value"]
+                driver.quit()
             except WebDriverException:
                 sys.exit("Browser closed unexpectedly")
         else:
@@ -290,7 +291,7 @@ def authorize(
         r = requests.get(api_url, headers={"Authorization": sessionId})
         all_api = r.json()["values"]
         latest_api = list(all_api.values())[-1]
-        print(f"Authenticated in {vault} on API {latest_api}.")
+        print(f"Authenticated in {vault} on API {list(all_api.keys())[-1]}.")
         return session_details(sessionId, latest_api)
     except:
         raise
