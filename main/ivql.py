@@ -250,12 +250,22 @@ def authorize(
         try:
             match browser:
                 case "chrome":
+                    from selenium.webdriver.chrome.options import Options
+                    opts = Options()
+                    opts.add_argument('log-level=3')
+                    print("Authenticating in Chrome")
                     driver = webdriver.Chrome()
                 case "edge":
-                    driver = webdriver.Edge()
+                    from selenium.webdriver.edge.options import Options
+                    opts = Options()
+                    opts.add_argument('log-level=3')
+                    print("Authenticating in Edge")
+                    driver = webdriver.Edge(options=opts)
                 case "firefox":
+                    print("Authenticating in Firefox")
                     driver = webdriver.Firefox()
                 case "safari":
+                    print("Authenticating in Safari")
                     driver = webdriver.Safari()
         except (SessionNotCreatedException, WebDriverException, Exception) as e:
             sys.exit(e)
