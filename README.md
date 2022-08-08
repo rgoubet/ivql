@@ -74,7 +74,7 @@ Quits the program
 Clears the console window
 
 # 3. Configuration file
-You can define the default settings for `outdir` and `delimiter` by specifying them in a file called `ivql.ini` in the working directory. The file must take the following form:
+You can define the default settings for `outdir` and `delimiter` by specifying them in a file called `ivql.ini`. The file must be located in the user profile configuration folder. If the file does not exist, it will be initialized. The file must take the following form:
 
 ```ini
 [DEFAULT]

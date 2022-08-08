@@ -220,7 +220,7 @@ class custom_df(pd.DataFrame):
 
 
 def authorize(
-    vault: str, user_name="", password="", sso=False, browser="chrome"
+    vault: str, user_name:str, password:str, sso=False, browser="chrome"
 ) -> session_details:
     """Authenticates in the specified Vault and returns a session
     details object.
@@ -228,9 +228,11 @@ def authorize(
 
 
     Args:
-        vault (str): DNS name of the Vaylt
+        vault (str): DNS name of the Vault
         user_name (str): User name
         password (str): Password
+        sso (bool): authenticate with single sign-on
+        browser (str): browser to use for SSO authentication
 
     Raises:
         HttpException: Exception in case of connection error
@@ -251,14 +253,16 @@ def authorize(
             match browser:
                 case "chrome":
                     from selenium.webdriver.chrome.options import Options
+
                     opts = Options()
-                    opts.add_argument('log-level=3')
+                    opts.add_argument("log-level=3")
                     print("Authenticating in Chrome")
                     driver = webdriver.Chrome()
                 case "edge":
                     from selenium.webdriver.edge.options import Options
+
                     opts = Options()
-                    opts.add_argument('log-level=3')
+                    opts.add_argument("log-level=3")
                     print("Authenticating in Edge")
                     driver = webdriver.Edge(options=opts)
                 case "firefox":
@@ -358,8 +362,20 @@ def get_config(cfg_file: str) -> dict:
         "delim": ",",
         "outdir": ".",
         "complete_while_typing": False,
-        "completer_file": "completer.txt",
+        "completer_file": os.path.join(os.path.dirname(__file__), "completer.txt"),
     }
+    if not os.path.exists(cfg_file):
+        print(f"Config file not found. Initializing at {cfg_file}")
+        with open(cfg_file, "w", newline="") as f:
+            f.writelines(
+                [
+                    "[DEFAULT]\r\n",
+                    "delimiter = ,\r\n",
+                    "outdir = .\r\n",
+                    "complete_on_tab = False\r\n",
+                    "completer_file = completer.txt",
+                ]
+            )
     try:  # If the config file loads successfully (i.e. it is well-formed)
         config.read(cfg_file)
         if config.has_option("DEFAULT", "delimiter"):
@@ -500,7 +516,10 @@ def main():
         if args.password is None:
             args.password = getpass()
 
-    config = get_config("ivql.ini")  # Get config settings
+    config_dir = user_config_dir("ivql")
+    createFolder(config_dir)
+
+    config = get_config(os.path.join(config_dir, "ivql.ini"))  # Get config settings
 
     # Get a Vault session
     try:
@@ -515,9 +534,7 @@ def main():
     ) as e:
         sys.exit(e)
 
-    createFolder(user_config_dir("ivql"))
-
-    vql_history = FileHistory(os.path.join(user_config_dir("ivql"), "history"))
+    vql_history = FileHistory(os.path.join(config_dir, "history"))
 
     # Initiate the prompt with a completer if the lexicon file is found
     try:
@@ -616,9 +633,13 @@ def main():
                     print("Reconnecting...")
                     try:
                         if args.sso:
-                            vault_session = authorize(args.vault, sso=True, browser=args.browser)
+                            vault_session = authorize(
+                                args.vault, sso=True, browser=args.browser
+                            )
                         else:
-                            vault_session = authorize(args.vault, args.user, args.password)
+                            vault_session = authorize(
+                                args.vault, args.user, args.password
+                            )
                     except (
                         requests.exceptions.ConnectionError,
                         HttpException,
