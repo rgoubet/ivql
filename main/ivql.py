@@ -220,7 +220,7 @@ class custom_df(pd.DataFrame):
 
 
 def authorize(
-    vault: str, user_name:str, password:str, sso=False, browser="chrome"
+    vault: str, user_name="", password="", sso=False, browser="chrome"
 ) -> session_details:
     """Authenticates in the specified Vault and returns a session
     details object.
