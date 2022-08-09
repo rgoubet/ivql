@@ -36,10 +36,10 @@ Unless single sign-on is selected, if `USER` or `PASSWORD` is missing, it will b
 
 > ## About Single Sign-On
 > `iVQL` uses [Selenium](https://www.selenium.dev/) to perform SSO authentication using a browser. The WebDriver for the selected browser must be available on the system:
-> - Chrome: https://chromedriver.chromium.org
-> - Edge: https://developer.microsoft.com/en-us/microsoft-edge/tools/webdriver/
-> - Firefox: https://github.com/mozilla/geckodriver
-> - Safari: https://developer.apple.com/safari/resources/
+> - Chrome: [https://chromedriver.chromium.org](https://chromedriver.chromium.org)
+> - Edge: [https://developer.microsoft.com/en-us/microsoft-edge/tools/webdriver/](https://developer.microsoft.com/en-us/microsoft-edge/tools/webdriver/)
+> - Firefox: [https://github.com/mozilla/geckodriver](https://github.com/mozilla/geckodriver)
+> - Safari: [https://developer.apple.com/safari/resources/](https://developer.apple.com/safari/resources/)
 
 # 2. Prompt input
 The prompt takes either a `SELECT` [VQL statement](http://developer.veevavault.com/vql), or one of the following commands. All commands are non-case-sensitive.
