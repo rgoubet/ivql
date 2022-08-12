@@ -575,7 +575,7 @@ def main():
         elif query.lower()[:9] == "delimiter":
             config["delim"] = query.split(" ")[-1]
         elif query.lower() == "outdir":
-            print("Current output folder: " + config["outdir"])
+            print("Current output folder: " + os.path.realpath(config["outdir"]))
         elif query.lower()[:6] == "outdir":
             outdir = query.split(" ")[-1]
             try:
