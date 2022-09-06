@@ -290,7 +290,7 @@ def authorize(
         else:
             param = {"username": user_name, "password": password}
             url = f"https://{vault}.veevavault.com/api/v22.2/auth"
-            auth = requests.post(url, params=param)
+            auth = requests.post(url, data=param)
             if auth.status_code != 200:
                 raise HttpException(responses[auth.status_code])
             auth_response_json = auth.json()
