@@ -242,7 +242,7 @@ def authorize(
         session_details: a session details objet with Vault details
     """
     if sso:
-        from selenium import webdriver
+        from selenium.webdriver import Chrome, Edge, Firefox, Safari
         from selenium.webdriver.support.ui import WebDriverWait
         from selenium.common.exceptions import (
             WebDriverException,
@@ -257,20 +257,20 @@ def authorize(
                     opts = Options()
                     opts.add_argument("log-level=3")
                     print("Authenticating in Chrome")
-                    driver = webdriver.Chrome()
+                    driver = Chrome()
                 case "edge":
                     from selenium.webdriver.edge.options import Options
 
                     opts = Options()
                     opts.add_argument("log-level=3")
                     print("Authenticating in Edge")
-                    driver = webdriver.Edge(options=opts)
+                    driver = Edge(options=opts)
                 case "firefox":
                     print("Authenticating in Firefox")
-                    driver = webdriver.Firefox()
+                    driver = Firefox()
                 case "safari":
                     print("Authenticating in Safari")
-                    driver = webdriver.Safari()
+                    driver = Safari()
         except (SessionNotCreatedException, WebDriverException, Exception) as e:
             sys.exit(e)
 
