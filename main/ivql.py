@@ -594,6 +594,7 @@ def main():
                         sep=config["delim"],
                         encoding="utf-8-sig",
                         index=False,
+                        date_format="%Y-%m-%d",
                     )
                     print(f"Results exported to {filename}.csv")
                 elif exp_format == "json":
