@@ -609,7 +609,7 @@ def main():
                 print(f"Failed to export to {filename}.{exp_format}")
         elif query.lower()[:9] == "getfields":
             vault_type = query.split(" ")[-1]
-            qfields = get_fields(vault_session, vault_type.lower())
+            qfields = get_fields(vault_session, vault_type.lower()) + [vault_type.lower()]
             try:
                 added_fields = [f for f in qfields if f not in vql_completer.words]
                 if len(added_fields) > 0:
