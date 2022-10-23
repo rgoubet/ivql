@@ -21,6 +21,7 @@ from prompt_toolkit.styles import Style
 from pygments.token import Keyword, Operator, Name, String, Number
 from pygments.lexer import RegexLexer, words
 from appdirs import user_config_dir
+from itertools import zip_longest
 
 
 class AuthenticationException(Exception):
@@ -612,6 +613,9 @@ def main():
             qfields = get_fields(vault_session, vault_type.lower()) + [vault_type.lower()]
             try:
                 added_fields = [f for f in qfields if f not in vql_completer.words]
+                chunk = int(round(len(added_fields)/3,0)) # number of rows for a 3 column table
+                fields_table = [added_fields[i:chunk+i] for i in range(0, len(added_fields), chunk)]
+                print(tabulate([list(sl) for sl in list(zip_longest(*fields_table))]))
                 if len(added_fields) > 0:
                     print("Adding fields:\n" + ", ".join(added_fields))
                     vql_completer.words.extend(added_fields)
