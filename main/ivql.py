@@ -595,13 +595,16 @@ def main():
                         sep=config["delim"],
                         encoding="utf-8-sig",
                         index=False,
-                        date_format="%Y-%m-%d",
+                        # date_format="%Y-%m-%d",
                     )
                     print(f"Results exported to {filename}.csv")
                 elif exp_format == "json":
                     with open(filename + ".json", "w", encoding="utf-8") as f:
                         json.dump(vql_results, f)
                         print(f"Results exported to {filename}.json")
+                elif exp_format == "xl":
+                    query_data.to_excel(filename + ".xlsx", index=False)
+                    print(f"Results exported to {filename}.xlsx")
                 else:
                     print(f"Unrecognized format {exp_format}")
             except NameError:
@@ -610,15 +613,26 @@ def main():
                 print(f"Failed to export to {filename}.{exp_format}")
         elif query.lower()[:9] == "getfields":
             vault_type = query.split(" ")[-1]
-            qfields = get_fields(vault_session, vault_type.lower()) + [vault_type.lower()]
+            qfields = get_fields(vault_session, vault_type.lower()) + [
+                vault_type.lower()
+            ]
             try:
                 added_fields = [f for f in qfields if f not in vql_completer.words]
                 if len(added_fields) > 0:
                     added_fields.sort()
-                    chunk = int(round(len(added_fields)/3,0)) # number of rows for a 3 column table
-                    fields_table = [added_fields[i:chunk+i] for i in range(0, len(added_fields), chunk)]
+                    chunk = (  # equivalent of math.ceil
+                        len(added_fields) // 3 + 1
+                        if len(added_fields) % 3 > 0
+                        else len(added_fields) // 3
+                    )  # number of rows for a 3 column table
+                    fields_table = [
+                        added_fields[i : chunk + i]
+                        for i in range(0, len(added_fields), chunk)
+                    ]
                     print("Adding fields:")
-                    print(tabulate([list(sl) for sl in list(zip_longest(*fields_table))]))
+                    print(
+                        tabulate([list(sl) for sl in list(zip_longest(*fields_table))])
+                    )
                     vql_completer.words.extend(added_fields)
                     vql_completer.words.sort()
                 else:
@@ -662,6 +676,13 @@ def main():
                     inplace=True,
                 )  # Remove responseDetails columns (subqueries)
                 query_data = query_data.convert_dtypes()
+                # try to convert any column with date in the name
+                for col in [c for c in query_data.columns if "date" in c]:
+                    try:
+                        query_data[col] = pd.to_datetime(query_data[col])
+                        query_data[col] = query_data[col].dt.tz_localize(None)
+                    except pd.ParserError:
+                        pass
                 print(
                     tabulate(
                         query_data.astype(object).fillna("").head(50),
