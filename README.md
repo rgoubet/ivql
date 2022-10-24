@@ -44,8 +44,8 @@ Unless single sign-on is selected, if `USER` or `PASSWORD` is missing, it will b
 # 2. Prompt input
 The prompt takes either a `SELECT` [VQL statement](http://developer.veevavault.com/vql), or one of the following commands. All commands are non-case-sensitive.
 
-## `export <json|csv>`
-Export the results of the last query to a `JSON` or `CSV` file. The filename is defined using the current time value.
+## `export <json|csv|xl>`
+Export the results of the last query to a `JSON`, `CSV` or `Excel` file. The filename is defined using the current time value.
 
 ## `delimiter <char>`
 Default `,`
