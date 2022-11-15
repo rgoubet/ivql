@@ -1,27 +1,27 @@
+import argparse
+import configparser
+import json
+import os
+import re
+import sys
+import time
+from dataclasses import dataclass
+from getpass import getpass
+from http.client import responses
+from itertools import zip_longest
+from urllib.parse import urlparse
+
 import pandas as pd
 import requests
-import json
-import argparse
-import time
-import os
-import configparser
-import sys
-import re
-
-from dataclasses import dataclass
-from http.client import responses
-from urllib.parse import urlparse
-from tabulate import tabulate
-from getpass import getpass
+from appdirs import user_config_dir
 from prompt_toolkit import PromptSession
 from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.history import FileHistory
 from prompt_toolkit.lexers import PygmentsLexer
 from prompt_toolkit.styles import Style
-from pygments.token import Keyword, Operator, Name, String, Number
 from pygments.lexer import RegexLexer, words
-from appdirs import user_config_dir
-from itertools import zip_longest
+from pygments.token import Keyword, Name, Number, Operator, String
+from tabulate import tabulate
 
 
 class AuthenticationException(Exception):
@@ -243,12 +243,10 @@ def authorize(
         session_details: a session details objet with Vault details
     """
     if sso:
+        from selenium.common.exceptions import (SessionNotCreatedException,
+                                                WebDriverException)
         from selenium.webdriver import Chrome, Edge, Firefox, Safari
         from selenium.webdriver.support.ui import WebDriverWait
-        from selenium.common.exceptions import (
-            WebDriverException,
-            SessionNotCreatedException,
-        )
 
         try:
             match browser:
