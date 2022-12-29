@@ -13,7 +13,7 @@ from urllib.parse import urlparse
 
 import pandas as pd
 import requests
-from appdirs import user_config_dir
+from platformdirs import user_config_dir
 from prompt_toolkit import PromptSession
 from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.history import FileHistory
