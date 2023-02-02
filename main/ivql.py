@@ -450,7 +450,7 @@ def execute_vql(
         return {"error": "Connection Error"}
 
 
-def get_fields(session: session_details, vault_type: str) -> list:
+def get_fields(session: session_details, vault_type: str, include_rel=True) -> list:
     """Returns a list of fields and relationships for the supplied
     Vault type (documents, users, groups, workflows...)
 
@@ -474,7 +474,10 @@ def get_fields(session: session_details, vault_type: str) -> list:
                 for p in r.json()["properties"]
                 if "relationshipName" in p.keys()
             ]
-            return docfields + docrelation
+            if include_rel:
+                return docfields + docrelation
+            else:
+                return docfields
     elif vault_type in ["users", "groups"]:
         url = session.api + f"/metadata/objects/{vault_type}"
         r = requests.get(url, headers={"Authorization": session.sessionId})
@@ -499,7 +502,7 @@ def get_fields(session: session_details, vault_type: str) -> list:
             return []
         else:
             obj_fields = [p["name"] for p in r.json()["object"]["fields"]]
-            if "relationships" in r.json()["object"].keys():
+            if "relationships" in r.json()["object"].keys() and include_rel:
                 obj_rel = [
                     p["relationship_name"] for p in r.json()["object"]["relationships"]
                 ]
@@ -640,6 +643,9 @@ def main():
         elif query.lower()[:6] != "select":
             print("Not a select statement or known command.")
         else:
+            if query.split()[1] == '*':
+                all = get_fields(vault_session, query.split()[3], include_rel=False)
+                query = query.replace('*', ','.join(all))
             vql_results = execute_vql(vault_session, query)
             if vql_results["responseStatus"] in ("FAILURE", "EXCEPTION"):
                 print(
