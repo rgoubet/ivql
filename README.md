@@ -44,6 +44,8 @@ Unless single sign-on is selected, if `USER` or `PASSWORD` is missing, it will b
 # 2. Prompt input
 The prompt takes either a `SELECT` [VQL statement](http://developer.veevavault.com/vql), or one of the following commands. All commands are non-case-sensitive.
 
+`ivql` supports `select * from …` statements. It will retrieve all queriable fields for the selected entity and subsitute the wildcard in the query.
+
 ## `export <json|csv|xl>`
 Export the results of the last query to a `JSON`, `CSV` or `Excel` file. The filename is defined using the current time value.
 
