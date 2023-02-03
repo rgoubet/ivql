@@ -64,6 +64,7 @@ minor_version_number__v
 modified_by__v
 modified_date__v
 name__v
+objects
 obsoletestate()
 offset
 order by
