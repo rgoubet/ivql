@@ -549,6 +549,8 @@ def main():
 
     vql_history = FileHistory(os.path.join(config_dir, "history"))
 
+    vault_objects = get_fields(vault_session, 'objects')
+
     # Initiate the prompt with a completer if the lexicon file is found
     try:
         with open(config["completer_file"], "r") as f:
@@ -560,6 +562,8 @@ def main():
             lexer=PygmentsLexer(VqlLexer),
             style=style,
         )
+        vql_completer.words.extend([f for f in vault_objects if f not in vql_completer.words])
+        vql_completer.words.sort()
     except FileNotFoundError:
         print(
             f"No autocompletion configuration file found ({config['completer_file']})"
