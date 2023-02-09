@@ -65,11 +65,9 @@ Sets the output directory for the results file. To set it back to the working di
 
 > Enter *outdir* without any specifier to display the currently set output directory.
 
-## `getfields <documents|objects|users|groups|object name>`
+## `getfields <documents|users|groups|object name>`
 
 Retrieves the list of (queryable) fields and relationships from the supplied object type and adds them to the auto-completion dictionary. The file `completer.txt` contains a predefined list of standard items.
-
-> `getfields objects` does not retrieve fields, but rather the list of objects that are configured in the Vault.
 
 ## `quit|exit`
 Quits the program
