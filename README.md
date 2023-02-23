@@ -29,27 +29,31 @@ options:
   -s, --sso             Authenticate with Single Sign-On (SSO)
   -b {chrome,edge,firefox,safari}, --browser {chrome,edge,firefox,safari}
                         Browser to use for SSO authentication
-
 ```
 
 Unless single sign-on is selected, if `USER` or `PASSWORD` is missing, it will be requested at the prompt.
 
 > ## About Single Sign-On
+> 
 > `iVQL` uses [Selenium](https://www.selenium.dev/) to perform SSO authentication using a browser. The WebDriver for the selected browser must be available on the system:
+> 
 > - Chrome: [https://chromedriver.chromium.org](https://chromedriver.chromium.org)
 > - Edge: [https://developer.microsoft.com/en-us/microsoft-edge/tools/webdriver/](https://developer.microsoft.com/en-us/microsoft-edge/tools/webdriver/)
 > - Firefox: [https://github.com/mozilla/geckodriver](https://github.com/mozilla/geckodriver)
 > - Safari: [https://developer.apple.com/safari/resources/](https://developer.apple.com/safari/resources/)
 
 # 2. Prompt input
+
 The prompt takes either a `SELECT` [VQL statement](http://developer.veevavault.com/vql), or one of the following commands. All commands are non-case-sensitive.
 
 > `ivql` supports `select * from …` statements. It will retrieve all queriable fields for the selected entity and subsitute the wildcard in the query.
 
 ## `export <json|csv|xl>`
+
 Export the results of the last query to a `JSON`, `CSV` or `Excel` file. The filename is defined using the current time value.
 
 ## `delimiter <char>`
+
 Default `,`
 
 Sets the delimiter used in the CSV output.
@@ -57,6 +61,7 @@ Sets the delimiter used in the CSV output.
 > Enter *delimiter* without any specifier to display the currently set delimiter.
 
 ## `outdir <folder>`
+
 Default `.`
 
 Sets the output directory for the results file. To set it back to the working directory, use the value `.`:
@@ -70,13 +75,16 @@ Sets the output directory for the results file. To set it back to the working di
 Retrieves the list of (queryable) fields and relationships from the supplied object type and adds them to the auto-completion dictionary. The file `completer.txt` contains a predefined list of standard items.
 
 ## `quit|exit`
+
 Quits the program
 
 ## `cls`
+
 Clears the console window
 
 # 3. Configuration file
-You can define the default settings for `outdir` and `delimiter` by specifying them in a file called `ivql.ini`. The file must be located in the user profile configuration folder. If the file does not exist, it will be initialized. The file must take the following form:
+
+You can define the default settings for `outdir` and `delimiter` by specifying them in a file called `ivql.ini`. The file must be located in the user profile configuration folder (e.g. `c:\Users\user\AppData\Local\ivql\ivql` on Windows). If the file does not exist, it will be initialized. The file must take the following form:
 
 ```ini
 [DEFAULT]
@@ -98,9 +106,9 @@ completer_file = completer.txt
 VQL has some distinct syntax that requires forgetting a few SQL assumptions:
 
 * **There are no joins**. Relationships between objects come predefined, and no new ones can be made *ad hoc* with a `join` keyword. Relationships can be discovered in the API and can be queried in two different syntaxes:
-
+  
   `"select id, name__v, security_model__cr.name__v, role__vr.name__v, user__vr.name__v from user_role_setup__v"` queries the `user_role_setup__v` object and also gets the `name__v` property of related objects (security model, role and user). Here, while `security_model__c` is the object, `security_model__cr` is the relationship between it and `user_role_setup__v`. This syntax applies because there Security Model has one value per document.
-
+  
   `"select id, document_number__v, (select name__v from document_product__vr) from documents"` queries the documents and the name of the related product. This syntax is used because Product has multiple values per document.
 
 * In SQL, a shortcut to a succession of `or` clauses is `in`: `field in ('value 1', 'value 2')`. In VQL, the keyword is `contains`: `field contains ('value 1', 'value 2')`.

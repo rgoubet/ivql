@@ -510,7 +510,11 @@ def get_fields(session: session_details, vault_type: str, include_rel=True) -> l
             print(r.json()["errors"][0]["message"])
             return []
         else:
-            return [obj["name"] for obj in r.json()["objects"]]
+            return [
+                obj["name"]
+                for obj in r.json()["objects"]
+                if obj["status"][0] == "active__v"
+            ]
     else:
         url = session.api + f"/metadata/vobjects/{vault_type}"
         r = requests.get(url, headers={"Authorization": session.sessionId})
@@ -555,7 +559,7 @@ def main():
 
     vql_history = FileHistory(os.path.join(config_dir, "history"))
 
-    vault_objects = get_fields(vault_session, 'objects')
+    vault_objects = get_fields(vault_session, "objects")
 
     # Initiate the prompt with a completer if the lexicon file is found
     try:
@@ -568,7 +572,9 @@ def main():
             lexer=PygmentsLexer(VqlLexer),
             style=style,
         )
-        vql_completer.words.extend([f for f in vault_objects if f not in vql_completer.words])
+        vql_completer.words.extend(
+            [f for f in vault_objects if f not in vql_completer.words]
+        )
         vql_completer.words.sort()
     except FileNotFoundError:
         print(
