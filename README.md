@@ -5,7 +5,7 @@ iVQL: Interactive VQL prompt
 
 Tabular display and CSV export automatically flatten data structures from nested queries.
 
-Auto-completion is based on a dictionary of terms in a text file (one term per line). This allows adding new terms without updating the code (e.g. in case of new features). Fields can be retrieved for documents and objects during the session to add them at run-time.
+Auto-completion is based on a dictionary of terms in a text file (one term per line). This allows adding new terms without updating the code (e.g. in case of new features). The names of objects available in the connected Vault are loaded at log-in. Fields can be retrieved for documents and objects during the session to add them at run-time.
 
 `iVQL` always connects to the most recent Vault API version to support the latest features.
 
