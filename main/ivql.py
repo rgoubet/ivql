@@ -558,7 +558,7 @@ def main():
         sys.exit(e)
 
     vql_history = FileHistory(os.path.join(config_dir, "history"))
-
+    print("Retrieving Vault objects")
     vault_objects = get_fields(vault_session, "objects")
 
     # Initiate the prompt with a completer if the lexicon file is found
