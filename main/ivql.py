@@ -466,6 +466,7 @@ def get_fields(session: session_details, vault_type: str, include_rel=True) -> l
     Args:
         session (session_details): Vault session
         vault_type (str): Vault type name
+        include_rel (bool): include relationships in the output
 
     Returns:
         list: List of fields and relationships
