@@ -212,11 +212,15 @@ class custom_df(pd.DataFrame):
                         if not self.columns.is_unique:
                             col_list = self.columns.to_list()
                             newcol_list = []
-                            i = 1
+                            counters = {}
                             for col in col_list:
                                 if col_list.count(col) > 1:
-                                    new_col = col + str(i)
-                                    i += 1
+                                    if col not in counters.keys():
+                                        counters[col] = 1
+                                        new_col = col + str(counters[col])
+                                        counters[col] += 1
+                                    else:
+                                        new_col = col
                                 else:
                                     new_col = col
                                 newcol_list.append(new_col)
