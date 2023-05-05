@@ -487,65 +487,69 @@ def get_fields(session: session_details, vault_type: str, include_rel=True) -> l
     Returns:
         list: List of fields and relationships
     """
-    if vault_type == "documents":
-        url = session.api + f"/metadata/objects/{vault_type}/properties"
-        r = requests.get(url, headers={"Authorization": session.sessionId})
-        if r.json()["responseStatus"] in ("FAILURE", "EXCEPTION"):
-            print(r.json()["errors"][0]["message"])
-            return []
-        else:
-            docfields = [p["name"] for p in r.json()["properties"] if p["queryable"]]
-            docrelation = [
-                p["relationshipName"]
-                for p in r.json()["properties"]
-                if "relationshipName" in p.keys()
-            ]
-            if include_rel:
-                return docfields + docrelation
+    match vault_type:
+        case "documents":
+            url = session.api + f"/metadata/objects/{vault_type}/properties"
+            r = requests.get(url, headers={"Authorization": session.sessionId})
+            if r.json()["responseStatus"] in ("FAILURE", "EXCEPTION"):
+                print(r.json()["errors"][0]["message"])
+                return []
             else:
-                return docfields
-    elif vault_type in ["users", "groups"]:
-        url = session.api + f"/metadata/objects/{vault_type}"
-        r = requests.get(url, headers={"Authorization": session.sessionId})
-        if r.json()["responseStatus"] in ("FAILURE", "EXCEPTION"):
-            print(r.json()["errors"][0]["message"])
-            return []
-        else:
-            return [p["name"] for p in r.json()["properties"] if p["queryable"]]
-    elif vault_type == "workflows":
-        url = session.api + f"/metadata/objects/{vault_type}"
-        r = requests.get(url, headers={"Authorization": session.sessionId})
-        if r.json()["responseStatus"] in ("FAILURE", "EXCEPTION"):
-            print(r.json()["errors"][0]["message"])
-            return []
-        else:
-            return [p["name"] for p in r.json()["properties"]]
-    elif vault_type == "objects":
-        url = session.api + f"/metadata/vobjects"
-        r = requests.get(url, headers={"Authorization": session.sessionId})
-        if r.json()["responseStatus"] in ("FAILURE", "EXCEPTION"):
-            print(r.json()["errors"][0]["message"])
-            return []
-        else:
-            return [
-                obj["name"]
-                for obj in r.json()["objects"]
-                if obj["status"][0] == "active__v"
-            ]
-    else:
-        url = session.api + f"/metadata/vobjects/{vault_type}"
-        r = requests.get(url, headers={"Authorization": session.sessionId})
-        if r.json()["responseStatus"] in ("FAILURE", "EXCEPTION"):
-            print(r.json()["errors"][0]["message"])
-            return []
-        else:
-            obj_fields = [p["name"] for p in r.json()["object"]["fields"]]
-            if "relationships" in r.json()["object"].keys() and include_rel:
-                obj_rel = [
-                    p["relationship_name"] for p in r.json()["object"]["relationships"]
+                docfields = [
+                    p["name"] for p in r.json()["properties"] if p["queryable"]
                 ]
-                obj_fields.extend(obj_rel)
-            return obj_fields
+                docrelation = [
+                    p["relationshipName"]
+                    for p in r.json()["properties"]
+                    if "relationshipName" in p.keys()
+                ]
+                if include_rel:
+                    return docfields + docrelation
+                else:
+                    return docfields
+        case "users" | "groups":
+            url = session.api + f"/metadata/objects/{vault_type}"
+            r = requests.get(url, headers={"Authorization": session.sessionId})
+            if r.json()["responseStatus"] in ("FAILURE", "EXCEPTION"):
+                print(r.json()["errors"][0]["message"])
+                return []
+            else:
+                return [p["name"] for p in r.json()["properties"] if p["queryable"]]
+        case "workflows":
+            url = session.api + f"/metadata/objects/{vault_type}"
+            r = requests.get(url, headers={"Authorization": session.sessionId})
+            if r.json()["responseStatus"] in ("FAILURE", "EXCEPTION"):
+                print(r.json()["errors"][0]["message"])
+                return []
+            else:
+                return [p["name"] for p in r.json()["properties"]]
+        case "objects":
+            url = session.api + f"/metadata/vobjects"
+            r = requests.get(url, headers={"Authorization": session.sessionId})
+            if r.json()["responseStatus"] in ("FAILURE", "EXCEPTION"):
+                print(r.json()["errors"][0]["message"])
+                return []
+            else:
+                return [
+                    obj["name"]
+                    for obj in r.json()["objects"]
+                    if obj["status"][0] == "active__v"
+                ]
+        case _:
+            url = session.api + f"/metadata/vobjects/{vault_type}"
+            r = requests.get(url, headers={"Authorization": session.sessionId})
+            if r.json()["responseStatus"] in ("FAILURE", "EXCEPTION"):
+                print(r.json()["errors"][0]["message"])
+                return []
+            else:
+                obj_fields = [p["name"] for p in r.json()["object"]["fields"]]
+                if "relationships" in r.json()["object"].keys() and include_rel:
+                    obj_rel = [
+                        p["relationship_name"]
+                        for p in r.json()["object"]["relationships"]
+                    ]
+                    obj_fields.extend(obj_rel)
+                return obj_fields
 
 
 def main():
