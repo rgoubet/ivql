@@ -195,12 +195,19 @@ class custom_df(pd.DataFrame):
         """Expand columns containing dictionaries horizontally
         and columns containing lists vertically"""
 
-        def expand_col(col):
+        def expand_col(col, col_name: str):
             """ "Horizontal" equivalent of pandas' vertical
             explode() function"""
+            col_name = col_name.split(".")[0]
             df = col.apply(pd.Series)
             if 0 in df.columns:  # this occurs for NaN rows
                 df.drop(columns=0, inplace=True)
+            # append the name of the original column
+            # to the newly created ones
+            df.rename(
+                columns={name: f"{col_name}.{name}" for name in df.columns},
+                inplace=True,
+            )
             return df
 
         while True:
@@ -209,6 +216,9 @@ class custom_df(pd.DataFrame):
                 first_val = self[col].first_valid_index()
                 if first_val != None:
                     if type(self[col].iloc[first_val]) == list:
+                        # Process the rare cases where nested
+                        # select statements generate duplicate
+                        # column names
                         if not self.columns.is_unique:
                             col_list = self.columns.to_list()
                             newcol_list = []
@@ -229,7 +239,7 @@ class custom_df(pd.DataFrame):
                         processed = True
                     elif type(self[col].iloc[first_val]) == dict:
                         self = pd.concat(
-                            [self, expand_col(self[col])],
+                            [self, expand_col(self[col], col)],
                             axis="columns",
                         ).drop(col, axis="columns")
                         processed = True
