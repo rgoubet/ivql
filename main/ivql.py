@@ -210,6 +210,29 @@ class custom_df(pd.DataFrame):
             )
             return df
 
+        def make_unique(col_list: list) -> list:
+            """Takes a list of columns with duplicates and
+            appends a sequence number
+
+            Args:
+                col_list (list): list of column names
+
+            Returns:
+                new_col (list): updated list of column names
+            """
+            newcol_list = []
+            counters = {}
+            for col in col_list:
+                if col_list.count(col) > 1:
+                    if col not in counters.keys():
+                        counters[col] = 1
+                    new_col = col + str(counters[col])
+                    counters[col] += 1
+                else:
+                    new_col = col
+                newcol_list.append(new_col)
+            return newcol_list
+
         while True:
             processed = False
             for col in self.columns:
@@ -220,21 +243,7 @@ class custom_df(pd.DataFrame):
                         # select statements generate duplicate
                         # column names
                         if not self.columns.is_unique:
-                            col_list = self.columns.to_list()
-                            newcol_list = []
-                            counters = {}
-                            for col in col_list:
-                                if col_list.count(col) > 1:
-                                    if col not in counters.keys():
-                                        counters[col] = 1
-                                        new_col = col + str(counters[col])
-                                        counters[col] += 1
-                                    else:
-                                        new_col = col
-                                else:
-                                    new_col = col
-                                newcol_list.append(new_col)
-                            self.columns = newcol_list
+                            self.columns = make_unique(self.columns.to_list())
                         self = self.explode(col)
                         processed = True
                     elif type(self[col].iloc[first_val]) == dict:
