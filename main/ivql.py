@@ -195,10 +195,10 @@ class custom_df(pd.DataFrame):
         """Expand columns containing dictionaries horizontally
         and columns containing lists vertically"""
 
-        def expand_col(col, col_name: str):
+        def expand_col(col):
             """ "Horizontal" equivalent of pandas' vertical
             explode() function"""
-            col_name = col_name.split(".")[0]
+            col_name = col.name.split(".")[0]
             df = col.apply(pd.Series)
             if 0 in df.columns:  # this occurs for NaN rows
                 df.drop(columns=0, inplace=True)
@@ -248,7 +248,7 @@ class custom_df(pd.DataFrame):
                         processed = True
                     elif type(self[col].iloc[first_val]) == dict:
                         self = pd.concat(
-                            [self, expand_col(self[col], col)],
+                            [self, expand_col(self[col])],
                             axis="columns",
                         ).drop(col, axis="columns")
                         processed = True
@@ -332,7 +332,7 @@ def authorize(
                 sys.exit("Browser closed unexpectedly")
         else:
             param = {"username": user_name, "password": password}
-            url = f"https://{vault}.veevavault.com/api/v22.2/auth"
+            url = f"https://{vault}.veevavault.com/api/v23.1/auth"
             auth = requests.post(url, data=param)
             if auth.status_code != 200:
                 raise HttpException(responses[auth.status_code])
