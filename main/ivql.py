@@ -118,9 +118,7 @@ class custom_df(pd.DataFrame):
         return custom_df(pd.json_normalize(data, **args))
 
 
-def authorize(
-    vault: str, user_name="", password="", sso=False, browser="chrome"
-) -> session_details:
+def authorize(vault: str, user_name="", password="", sso=False) -> session_details:
     """Authenticates in the specified Vault and returns a session
     details object.
     In case authentication fails, raises a custom exception
@@ -131,7 +129,6 @@ def authorize(
         user_name (str): User name
         password (str): Password
         sso (bool): authenticate with single sign-on
-        browser (str): browser to use for SSO authentication
 
     Raises:
         HttpException: Exception in case of connection error
@@ -140,52 +137,72 @@ def authorize(
     Returns:
         session_details: a session details objet with Vault details
     """
-    if sso:
-        from selenium.common.exceptions import (
-            SessionNotCreatedException,
-            WebDriverException,
-        )
-        from selenium.webdriver import Chrome, Edge, Firefox, Safari
-        from selenium.webdriver.support.ui import WebDriverWait
-
-        try:
-            match browser:
-                case "chrome":
-                    from selenium.webdriver.chrome.options import Options
-
-                    opts = Options()
-                    opts.add_argument("log-level=3")
-                    print("Authenticating in Chrome")
-                    driver = Chrome()
-                case "edge":
-                    from selenium.webdriver.edge.options import Options
-
-                    opts = Options()
-                    opts.add_argument("log-level=3")
-                    print("Authenticating in Edge")
-                    driver = Edge(options=opts)
-                case "firefox":
-                    print("Authenticating in Firefox")
-                    driver = Firefox()
-                case "safari":
-                    print("Authenticating in Safari")
-                    driver = Safari()
-        except (SessionNotCreatedException, WebDriverException, Exception) as e:
-            sys.exit(e)
 
     try:
         if sso:
-            try:
-                driver.get(f"https://{vault}.veevavault.com/")
-            except WebDriverException as e:
-                sys.exit(e)
-            try:
-                sessionId = WebDriverWait(driver, timeout=60).until(
-                    lambda d: d.get_cookie("TK")
-                )["value"]
-                driver.quit()
-            except WebDriverException:
-                sys.exit("Browser closed unexpectedly")
+            from PyQt5.QtCore import QCoreApplication, QUrl
+            from PyQt5.QtNetwork import QNetworkCookie
+            from PyQt5.QtWidgets import QApplication, QMainWindow
+            from PyQt5.QtWebEngineWidgets import (
+                QWebEnginePage,
+                QWebEngineProfile,
+                QWebEngineSettings,
+                QWebEngineView,
+            )
+
+            class OpenconnectSamlAuth(QMainWindow):
+                def __init__(self, parent=None):
+                    super(OpenconnectSamlAuth, self).__init__(parent)
+
+                    self._cookie = None
+
+                    self.webview = QWebEngineView()
+
+                    self.profile = QWebEngineProfile("storage", self.webview)
+                    self.cookie_store = self.profile.cookieStore()
+                    self.cookie_store.cookieAdded.connect(self.handle_cookie_added)
+
+                    self.profile.settings().setAttribute(
+                        QWebEngineSettings.JavascriptEnabled, True
+                    )
+
+                    webpage = QWebEnginePage(self.profile, self)
+                    self.webview.setPage(webpage)
+                    self.webview.titleChanged.connect(self.update_title)
+
+                    self.setCentralWidget(self.webview)
+                    self.resize(1024, 768)
+
+                @property
+                def cookie(self):
+                    return self._cookie
+
+                def login(self, url):
+                    self.webview.load(QUrl.fromUserInput(url))
+                    self.webview.setWindowTitle("Loading...")
+
+                def update_title(self):
+                    self.webview.setWindowTitle(self.webview.title())
+
+                def handle_cookie_added(self, cookie):
+                    if cookie.name() == b"TK":
+                        self._cookie = QNetworkCookie(cookie)
+                        QCoreApplication.quit()
+
+            app = QApplication([])
+
+            openconnect_webobj = OpenconnectSamlAuth()
+            openconnect_webobj.login(f"https://{vault}.veevavault.com/")
+            openconnect_webobj.show()
+
+            app.exec_()
+
+            cookie = openconnect_webobj.cookie
+            if cookie is not None:
+                sessionId = str(cookie.value(), encoding="utf-8")
+            else:
+                sys.exit("Browser closed unexpectedly.")
+
         else:
             param = {"username": user_name, "password": password}
             url = f"https://{vault}.veevavault.com/api/v23.1/auth"
@@ -223,13 +240,6 @@ def parse_args():
         action="store_true",
         default=False,
         help="Authenticate with Single Sign-On (SSO)",
-    )
-    parser.add_argument(
-        "-b",
-        "--browser",
-        choices=["chrome", "edge", "firefox", "safari"],
-        default="chrome",
-        help="Browser to use for SSO authentication",
     )
     parser.add_argument("vault", help='Vault server, excluding ".veevavault.com"')
     args = parser.parse_args()
@@ -443,7 +453,7 @@ def main():
     # Get a Vault session
     try:
         if args.sso:
-            vault_session = authorize(args.vault, sso=True, browser=args.browser)
+            vault_session = authorize(args.vault, sso=True)
         else:
             vault_session = authorize(args.vault, args.user, args.password)
     except (
@@ -580,9 +590,7 @@ def main():
                     print("Reconnecting...")
                     try:
                         if args.sso:
-                            vault_session = authorize(
-                                args.vault, sso=True, browser=args.browser
-                            )
+                            vault_session = authorize(args.vault, sso=True)
                         else:
                             vault_session = authorize(
                                 args.vault, args.user, args.password

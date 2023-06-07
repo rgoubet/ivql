@@ -12,9 +12,7 @@ Auto-completion is based on a dictionary of terms in a text file (one term per l
 # 1. Usage
 
 ```
-usage: ivql [-h] [-u USER] [-p PASSWORD] [-s]
-            [-b {chrome,edge,firefox,safari}]
-            vault
+usage: ivql [-h] [-u USER] [-p PASSWORD] [-s] vault
 
 An interactive VQL prompt
 
@@ -27,20 +25,11 @@ options:
   -p PASSWORD, --password PASSWORD
                         Password
   -s, --sso             Authenticate with Single Sign-On (SSO)
-  -b {chrome,edge,firefox,safari}, --browser {chrome,edge,firefox,safari}
-                        Browser to use for SSO authentication
 ```
 
 Unless single sign-on is selected, if `USER` or `PASSWORD` is missing, it will be requested at the prompt.
 
-> ## About Single Sign-On
-> 
-> `iVQL` uses [Selenium](https://www.selenium.dev/) to perform SSO authentication using a browser. The WebDriver for the selected browser must be available on the system:
-> 
-> - Chrome: [https://chromedriver.chromium.org](https://chromedriver.chromium.org)
-> - Edge: [https://developer.microsoft.com/en-us/microsoft-edge/tools/webdriver/](https://developer.microsoft.com/en-us/microsoft-edge/tools/webdriver/)
-> - Firefox: [https://github.com/mozilla/geckodriver](https://github.com/mozilla/geckodriver)
-> - Safari: [https://developer.apple.com/safari/resources/](https://developer.apple.com/safari/resources/)
+If `--sso` is selected, a browser window will open to log in. `USER` and `PASSWORD` will then be ignored.
 
 # 2. Prompt input
 
