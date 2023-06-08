@@ -1,7 +1,7 @@
 iVQL: Interactive VQL prompt
 ============================
 
-`iVQL` is an interactive VQL prompt similar to common command-line SQL clients. It supports auto-completion, syntax highlighting, history between sessions, results display in a tabular format and export to CSV and raw JSON.
+`iVQL` is an interactive VQL prompt similar to common command-line SQL clients. It supports auto-completion, syntax highlighting, history between sessions, results display in a tabular format and export to CSV, Excel and raw JSON.
 
 Tabular display and CSV export automatically flatten data structures from nested queries.
 
