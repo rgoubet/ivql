@@ -610,7 +610,8 @@ def main():
                     ],
                     inplace=True,
                 )  # Remove responseDetails columns (subqueries)
-                query_data = query_data.convert_dtypes()
+                for col in query_data.columns:
+                    query_data[col] = pd.to_numeric(query_data[col], errors="ignore")
                 # try to convert any column with date in the name
                 for col in [c for c in query_data.columns if "date" in c]:
                     try:
