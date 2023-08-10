@@ -74,6 +74,7 @@ class VqlLexer(RegexLexer):
                         "json",
                         "csv",
                         "objects",
+                        "xl",
                     ),
                     suffix=r"\b",
                 ),

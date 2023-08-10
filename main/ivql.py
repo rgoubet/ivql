@@ -611,14 +611,14 @@ def main():
                     inplace=True,
                 )  # Remove responseDetails columns (subqueries)
                 for col in query_data.columns:
-                    query_data[col] = pd.to_numeric(query_data[col], errors="ignore")
-                # try to convert any column with date in the name
-                for col in [c for c in query_data.columns if "date" in c]:
-                    try:
-                        query_data[col] = pd.to_datetime(query_data[col])
-                        query_data[col] = query_data[col].dt.tz_localize(None)
-                    except pd.ParserError:
-                        pass
+                    if "date" in col:
+                        try:
+                            query_data[col] = pd.to_datetime(query_data[col])
+                            query_data[col] = query_data[col].dt.tz_localize(None)
+                        except pd.ParserError:
+                            pass
+                    else:
+                        query_data[col] = pd.to_numeric(query_data[col], errors="ignore")
                 print(
                     tabulate(
                         query_data.astype(object).fillna("").head(50),
