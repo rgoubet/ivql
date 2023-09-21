@@ -53,7 +53,7 @@ class custom_df(pd.DataFrame):
             """ "Horizontal" equivalent of pandas' vertical
             explode() function"""
             col_name = col.name.split(".")[0]
-            df = col.apply(pd.Series)
+            df = pd.json_normalize(col)
             if 0 in df.columns:  # this occurs for NaN rows
                 df.drop(columns=0, inplace=True)
             # append the name of the original column
