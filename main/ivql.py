@@ -615,7 +615,7 @@ def main():
                         try:
                             query_data[col] = pd.to_datetime(query_data[col])
                             query_data[col] = query_data[col].dt.tz_localize(None)
-                        except pd.ParserError:
+                        except pd.DateParseError:
                             pass
                     else:
                         query_data[col] = pd.to_numeric(query_data[col], errors="ignore")
