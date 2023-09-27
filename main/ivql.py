@@ -558,11 +558,11 @@ def main():
                     fields_table = [
                         added_fields[i : chunk + i]
                         for i in range(0, len(added_fields), chunk)
-                    ]
+                    ] # Split list in 3 sublists
                     print("Adding fields:")
                     print(
-                        tabulate([list(sl) for sl in list(zip_longest(*fields_table))])
-                    )
+                        tabulate(list(zip_longest(*fields_table)))
+                    ) # transpose the sublits with zip_longest
                     vql_completer.words.extend(added_fields)
                     vql_completer.words.sort()
                 else:
