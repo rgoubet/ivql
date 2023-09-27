@@ -554,11 +554,7 @@ def main():
                 added_fields = [f for f in qfields if f not in vql_completer.words]
                 if len(added_fields) > 0:
                     added_fields.sort()
-                    chunk = (  # equivalent of math.ceil
-                        len(added_fields) // 3 + 1
-                        if len(added_fields) % 3 > 0
-                        else len(added_fields) // 3
-                    )  # number of rows for a 3 column table
+                    chunk = -(-len(added_fields) // 3) # number of rows for a 3 column table
                     fields_table = [
                         added_fields[i : chunk + i]
                         for i in range(0, len(added_fields), chunk)
@@ -618,7 +614,9 @@ def main():
                         except pd.DateParseError:
                             pass
                     else:
-                        query_data[col] = pd.to_numeric(query_data[col], errors="ignore")
+                        query_data[col] = pd.to_numeric(
+                            query_data[col], errors="ignore"
+                        )
                 print(
                     tabulate(
                         query_data.astype(object).fillna("").head(50),
