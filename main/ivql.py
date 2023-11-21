@@ -534,7 +534,7 @@ def main():
                     print(f"Results exported to {filename}.csv")
                 elif exp_format == "json":
                     with open(filename + ".json", "w", encoding="utf-8") as f:
-                        json.dump(vql_results, f)
+                        json.dump(vql_results, f, ensure_ascii=False)
                         print(f"Results exported to {filename}.json")
                 elif exp_format == "xl":
                     query_data.to_excel(filename + ".xlsx", index=False)
@@ -562,7 +562,7 @@ def main():
                     print("Adding fields:")
                     print(
                         tabulate(list(zip_longest(*fields_table)))
-                    ) # transpose the sublits with zip_longest
+                    ) # transpose the sublists with zip_longest
                     vql_completer.words.extend(added_fields)
                     vql_completer.words.sort()
                 else:
