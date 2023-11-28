@@ -431,7 +431,7 @@ def get_fields(session: session_details, vault_type: str, include_rel=True) -> l
                 type_rel_types[t] = r.json()["relationshipTypes"]
             rel_props = set()
             for v in type_rel_props.values():
-                rel_props = set().union([r["name"] for r in v if r["queryable"]])
+                rel_props = rel_props.union([r["name"] for r in v if r["queryable"]])
             rel_names = set()
             for v in type_rel_types.values():
                 rel_names = rel_names.union([r["value"] for r in v])
