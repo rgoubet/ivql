@@ -408,8 +408,36 @@ def get_fields(session: session_details, vault_type: str, include_rel=True) -> l
                 return []
             else:
                 return [p["name"] for p in r.json()["properties"]]
+        case "relationships":
+            r = requests.get(
+                session.api + "/metadata/objects/documents/types",
+                headers={"Authorization": session.sessionId},
+            )
+            if r.json()["responseStatus"] in ("FAILURE", "EXCEPTION"):
+                print(r.json()["errors"][0]["message"])
+                return []
+            all_types = [t["value"].split("/")[-1] for t in r.json()["types"]]
+            type_rel_props = {}
+            type_rel_types = {}
+            for t in all_types:
+                r = requests.get(
+                    session.api + f"/metadata/objects/documents/types/{t}/relationships",
+                    headers={"Authorization": session.sessionId},
+                )
+                if r.json()["responseStatus"] in ("FAILURE", "EXCEPTION"):
+                    print(r.json()["errors"][0]["message"])
+                    return []
+                type_rel_props[t] = r.json()["properties"]
+                type_rel_types[t] = r.json()["relationshipTypes"]
+            rel_props = set()
+            for v in type_rel_props.values():
+                rel_props = set().union([r["name"] for r in v if r["queryable"]])
+            rel_names = set()
+            for v in type_rel_types.values():
+                rel_names = rel_names.union([r["value"] for r in v])
+            return list(rel_names.union(rel_props))
         case "objects":
-            url = session.api + f"/metadata/vobjects"
+            url = session.api + "/metadata/vobjects"
             r = requests.get(url, headers={"Authorization": session.sessionId})
             if r.json()["responseStatus"] in ("FAILURE", "EXCEPTION"):
                 print(r.json()["errors"][0]["message"])
@@ -554,15 +582,17 @@ def main():
                 added_fields = [f for f in qfields if f not in vql_completer.words]
                 if len(added_fields) > 0:
                     added_fields.sort()
-                    chunk = -(-len(added_fields) // 3) # number of rows for a 3 column table
+                    chunk = -(
+                        -len(added_fields) // 3
+                    )  # number of rows for a 3 column table
                     fields_table = [
                         added_fields[i : chunk + i]
                         for i in range(0, len(added_fields), chunk)
-                    ] # Split list in 3 sublists
+                    ]  # Split list in 3 sublists
                     print("Adding fields:")
                     print(
                         tabulate(list(zip_longest(*fields_table)))
-                    ) # transpose the sublists with zip_longest
+                    )  # transpose the sublists with zip_longest
                     vql_completer.words.extend(added_fields)
                     vql_completer.words.sort()
                 else:
