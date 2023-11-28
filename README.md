@@ -59,7 +59,7 @@ Sets the output directory for the results file. To set it back to the working di
 
 > Enter *outdir* without any specifier to display the currently set output directory.
 
-## `getfields <documents|users|groups|object name>`
+## `getfields <documents|relationships|workflows|users|groups|object name>`
 
 Retrieves the list of (queryable) fields and relationships from the supplied object type and adds them to the auto-completion dictionary. The file `completer.txt` contains a predefined list of standard items.
 
