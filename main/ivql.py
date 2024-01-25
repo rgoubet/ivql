@@ -187,6 +187,8 @@ def authorize(vault: str, user_name="", password="", sso=False) -> session_detai
                 def handle_cookie_added(self, cookie):
                     if cookie.name() == b"TK":
                         self._cookie = QNetworkCookie(cookie)
+                        self.profile.clearHttpCache()
+                        self.cookie_store.deleteAllCookies()
                         QCoreApplication.quit()
 
             app = QApplication([])
@@ -352,7 +354,6 @@ def execute_vql(
                     + response["responseDetails"]["next_page"],
                     headers={"Authorization": session.sessionId},
                 )
-                # response = json.loads(r.text)
                 response = r.json()
                 results["data"].extend(response["data"])
         return results
@@ -421,7 +422,8 @@ def get_fields(session: session_details, vault_type: str, include_rel=True) -> l
             type_rel_types = {}
             for t in all_types:
                 r = requests.get(
-                    session.api + f"/metadata/objects/documents/types/{t}/relationships",
+                    session.api
+                    + f"/metadata/objects/documents/types/{t}/relationships",
                     headers={"Authorization": session.sessionId},
                 )
                 if r.json()["responseStatus"] in ("FAILURE", "EXCEPTION"):
@@ -644,12 +646,13 @@ def main():
                         except pd.DateParseError:
                             pass
                     else:
-                        query_data[col] = pd.to_numeric(
-                            query_data[col], errors="ignore"
-                        )
+                        try:
+                            query_data[col] = pd.to_numeric(query_data[col])
+                        except:
+                            pass
                 print(
                     tabulate(
-                        query_data.astype(object).fillna("").head(50),
+                        query_data.fillna("").head(50),
                         headers="keys",
                         tablefmt="github",
                         showindex=False,
