@@ -468,6 +468,7 @@ def get_fields(session: session_details, vault_type: str, include_rel=True) -> l
 
 
 def main():
+    pd.set_option('future.no_silent_downcasting', True)
     args = parse_args()  # get command line arguments
     if not args.sso:
         if args.user is None:
@@ -643,7 +644,7 @@ def main():
                         try:
                             query_data[col] = pd.to_datetime(query_data[col])
                             query_data[col] = query_data[col].dt.tz_localize(None)
-                        except pd.DateParseError:
+                        except:
                             pass
                     else:
                         try:
@@ -652,7 +653,7 @@ def main():
                             pass
                 print(
                     tabulate(
-                        query_data.fillna("").head(50),
+                        query_data.astype(object).fillna("").head(50),
                         headers="keys",
                         tablefmt="github",
                         showindex=False,
