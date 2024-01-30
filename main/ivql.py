@@ -468,7 +468,7 @@ def get_fields(session: session_details, vault_type: str, include_rel=True) -> l
 
 
 def main():
-    pd.set_option('future.no_silent_downcasting', True)
+    pd.set_option("future.no_silent_downcasting", True)
     args = parse_args()  # get command line arguments
     if not args.sso:
         if args.user is None:
@@ -565,7 +565,7 @@ def main():
                     print(f"Results exported to {filename}.csv")
                 elif exp_format == "json":
                     with open(filename + ".json", "w", encoding="utf-8") as f:
-                        json.dump(vql_results, f, ensure_ascii=False)
+                        json.dump(vql_results, f, ensure_ascii=False, indent=4)
                         print(f"Results exported to {filename}.json")
                 elif exp_format == "xl":
                     query_data.to_excel(filename + ".xlsx", index=False)
