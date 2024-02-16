@@ -606,7 +606,10 @@ def main():
             print("Not a select statement or known command.")
         else:
             if query.split()[1] == "*":
-                all = get_fields(vault_session, query.split()[3], include_rel=False)
+                if query.split()[3].lower() in ("allversions", "favorites", "allversions", "latestversion"):
+                    all = get_fields(vault_session, query.split()[4], include_rel=False)
+                else:
+                    all = get_fields(vault_session, query.split()[3], include_rel=False)                    
                 query = query.replace("*", ",".join(all))
             vql_results = execute_vql(vault_session, query)
             if vql_results["responseStatus"] in ("FAILURE", "EXCEPTION"):
