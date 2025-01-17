@@ -12,6 +12,7 @@ from urllib.parse import urlparse
 
 import pandas as pd
 import requests
+from pandas.io.formats import excel
 from platformdirs import user_config_dir
 from prompt_toolkit import PromptSession
 from prompt_toolkit.completion import WordCompleter
@@ -469,6 +470,7 @@ def get_fields(session: session_details, vault_type: str, include_rel=True) -> l
 
 def main():
     pd.set_option("future.no_silent_downcasting", True)
+    excel.ExcelFormatter.header_style = None
     args = parse_args()  # get command line arguments
     if not args.sso:
         if args.user is None:
