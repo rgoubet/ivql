@@ -3,6 +3,18 @@ iVQL: Interactive VQL prompt
 
 `iVQL` is an interactive VQL prompt similar to common command-line SQL clients. It supports auto-completion, syntax highlighting, history between sessions, results display in a tabular format and export to CSV, Excel and raw JSON.
 
+Key features:
+
+- Autocompletion and syntax highlighting
+- Retrieve object and document field names for autocompletion
+- Expansion of `*` wildcards (e.g. `select * from documents`)
+- Single sign-on support
+- Export to CSV, Excel and JSON
+
+Known limitations:
+
+- Pagination of results from *nested* queries is not resolved. If a nested query (i.e. `select (select … from …) from …`) returns more than 1000 results, only the first 1000 results from the nested query are retrieved. For instance, when querying group membership, if there are more than 1000 members per group, only the first 1000 members are retrieved.
+
 Tabular display and CSV export automatically flatten data structures from nested queries.
 
 Auto-completion is based on a dictionary of terms in a text file (one term per line). This allows adding new terms without updating the code (e.g. in case of new features). The names of objects available in the connected Vault are loaded at log-in. Fields can be retrieved for documents and objects during the session to add them at run-time.
